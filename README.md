@@ -29,7 +29,7 @@ InternIQ, üniversite öğrencilerinin staj arama, başvuru ve mülakat hazırl�
 
 ```bash
 # 1. Repo'yu klonlayın
-git clone https://github.com/KULLANICI_ADI/InternIQ.git
+git clone https://github.com/burakyalcin10/InternIQ.git
 
 # 2. Proje dizinine gidin
 cd InternIQ
@@ -85,7 +85,7 @@ Detaylı AI agent entegrasyon planı için: [📑 AI_Agent_Planning.md](docs/AI_
 
 ## 🌐 Canlı Demo
 
-🔗 [InternIQ Live Demo](https://KULLANICI_ADI.github.io/InternIQ/)
+🔗 [InternIQ Live Demo](https://burakyalcin10.github.io/InternIQ/)
 
 ## 📝 Lisans
 
