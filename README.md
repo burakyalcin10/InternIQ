@@ -83,9 +83,7 @@ InternIQ/
 
 Detaylı AI agent entegrasyon planı için: [📑 InternIQ — AI Agent Integration Planning Document.pdf](./InternIQ%20—%20AI%20Agent%20Integration%20Planning%20Document.pdf)
 
-## 🌐 Canlı Demo
 
-🔗 [InternIQ Live Demo](https://intern-iq-iota.vercel.app/index.html/)
 
 ## 📝 Lisans
 
