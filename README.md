@@ -81,11 +81,11 @@ InternIQ/
 
 ## 📄 AI Agent Planlama Dokümanı
 
-Detaylı AI agent entegrasyon planı için: [📑 AI_Agent_Planning.md](docs/AI_Agent_Planning.md)
+Detaylı AI agent entegrasyon planı için: [📑 InternIQ — AI Agent Integration Planning Document.pdf](./InternIQ%20—%20AI%20Agent%20Integration%20Planning%20Document.pdf)
 
 ## 🌐 Canlı Demo
 
-🔗 [InternIQ Live Demo](https://burakyalcin10.github.io/InternIQ/)
+🔗 [InternIQ Live Demo](https://intern-iq-iota.vercel.app/index.html/)
 
 ## 📝 Lisans
 
@@ -93,4 +93,3 @@ Bu proje eğitim amaçlı geliştirilmiştir.
 
 ---
 
-*Built with 🤖 & ❤️ for AI Agents course — 2026*
