@@ -1,0 +1,98 @@
+[
+  {
+    "id": 1,
+    "name": "ASELSAN",
+    "logo": "🛡️",
+    "industry": "Savunma Sanayii",
+    "employees": "10,000+",
+    "rating": 4.3,
+    "tech_stack": ["C/C++", "Embedded Linux", "FPGA/VHDL", "Qt", "Python", "MATLAB"],
+    "culture": "Mühendislik odaklı, uzun vadeli projeler, akademik işbirlikleri. Türkiye'nin en büyük savunma elektroniği şirketi.",
+    "interview_style": "Online yetenek testi + 2 teknik mülakat + HR görüşme. Gömülü sistemler ve sinyal işleme bilgisi önemli.",
+    "recent_news": "ASELSAN 2026 'a Yetenek Yaz Stajı' başvuruları Savunma Kariyer üzerinden devam ediyor."
+  },
+  {
+    "id": 2,
+    "name": "TUSAŞ",
+    "logo": "✈️",
+    "industry": "Havacılık & Uzay",
+    "employees": "14,000+",
+    "rating": 4.5,
+    "tech_stack": ["C++", "Python", "MATLAB", "Simulink", "Model-Based Design", "DO-178C"],
+    "culture": "Milli gurur projelerinde çalışma fırsatı. KAAN, Hürjet, ANKA, Gökbey gibi projelerde görev alabilirsiniz.",
+    "interview_style": "SKY Discover: Online başvuru + teknik değerlendirme + mülakat. Havacılık mühendisliği bilgisi artı puan.",
+    "recent_news": "TUSAŞ, KAAN savaş uçağı ve Hürjet eğitim uçağı gelişimine devam ediyor. SKY Discover 2026 başvuruları açık."
+  },
+  {
+    "id": 3,
+    "name": "BAYKAR",
+    "logo": "🚁",
+    "industry": "Savunma / Otonom Sistemler",
+    "employees": "5,000+",
+    "rating": 4.7,
+    "tech_stack": ["Python", "C++", "ROS", "OpenCV", "TensorFlow", "Embedded Linux"],
+    "culture": "Yenilikçi, hızlı tempolu startup kültürü. Bayraktar TB2, AKINCI, Kızılelma projelerinde çalışma imkanı.",
+    "interview_style": "Online başvuru + coding test + teknik mülakat + otonom sistemler/görüntü işleme case study.",
+    "recent_news": "BAYKAR Kızılelma insansız savaş uçağının uçuş testleri devam ediyor. 2026 Yaz staj değerlendirmeleri sürüyor."
+  },
+  {
+    "id": 4,
+    "name": "Softtech",
+    "logo": "🏦",
+    "industry": "Fintech / Bankacılık",
+    "employees": "3,500+",
+    "rating": 4.1,
+    "tech_stack": ["Java", "Spring Boot", "React", "Kubernetes", "Kafka", "Oracle"],
+    "culture": "İş Bankası bünyesinde fintech geliştirme. Road to Tech programı ile yapılandırılmış staj deneyimi.",
+    "interview_style": "Online test + coding challenge + 2 teknik mülakat. Java ve microservice bilgisi tercih sebebi.",
+    "recent_news": "Softtech Road to Tech 2026 başvuruları açık. Haziran-Eylül arası 3 aylık staj programı."
+  },
+  {
+    "id": 5,
+    "name": "Insider",
+    "logo": "📊",
+    "industry": "MarTech / SaaS",
+    "employees": "1,200+",
+    "rating": 4.5,
+    "tech_stack": ["React", "Go", "Python", "PostgreSQL", "AWS", "Kubernetes"],
+    "culture": "Ürün odaklı, global takım, sürekli öğrenme. 30+ ülkede 1200+ müşteri. Gartner lideri.",
+    "interview_style": "Take-home proje + pair programming + behavioral interview. Ürün düşüncesi ve problem çözme yeteneği değerlendirilir.",
+    "recent_news": "Insider, Gartner Magic Quadrant 2026'da lider seçildi. Global büyüme devam ediyor."
+  },
+  {
+    "id": 6,
+    "name": "HAVELSAN",
+    "logo": "💻",
+    "industry": "Savunma IT / Simülasyon",
+    "employees": "6,000+",
+    "rating": 4.0,
+    "tech_stack": ["Java", "React", "Docker", "Kubernetes", "PostgreSQL", "Unity"],
+    "culture": "Büyük ölçekli yazılım projeleri, siber güvenlik ve simülasyon alanlarında uzmanlaşma. HİT Staj Programı yapılandırılmış.",
+    "interview_style": "Ulusal Staj Programı + online değerlendirme + teknik mülakat. Yazılım mühendisliği temelleri test edilir.",
+    "recent_news": "HAVELSAN HİT Yaz Staj Programı 2026 başvuruları devam ediyor. Siber güvenlik ve simülasyon projeleri."
+  },
+  {
+    "id": 7,
+    "name": "Trendyol",
+    "logo": "🛒",
+    "industry": "E-Commerce / Tech",
+    "employees": "5,000+",
+    "rating": 4.2,
+    "tech_stack": ["Java", "Kotlin", "React", "Kubernetes", "Kafka", "Elasticsearch"],
+    "culture": "Hızlı tempolu, veri odaklı, yenilikçi. Türkiye'nin en büyük e-ticaret platformu.",
+    "interview_style": "2 teknik tur + 1 HR + system design. Microservice mimarisi ve distributed systems bilgisi artı.",
+    "recent_news": "Trendyol 2026 Yaz Stajı başvuruları Youthall üzerinden açık. 5 yeni Avrupa pazarına açıldı."
+  },
+  {
+    "id": 8,
+    "name": "ROKETSAN",
+    "logo": "🚀",
+    "industry": "Savunma / Roket Sistemleri",
+    "employees": "4,500+",
+    "rating": 4.4,
+    "tech_stack": ["C++", "Python", "MATLAB", "Simulink", "Embedded Systems", "Control Theory"],
+    "culture": "Yüksek teknoloji, hassas mühendislik. Füze yönlendirme ve kontrol sistemleri üzerinde çalışma deneyimi.",
+    "interview_style": "STAGE programı: Online başvuru + teknik test + mülakat. Kontrol sistemleri ve simülasyon bilgisi değerlendirilir.",
+    "recent_news": "ROKETSAN STAGE 2026 başvuruları başladı. Hipersonik füze ve akıllı mühimmat geliştirme projeleri devam ediyor."
+  }
+]

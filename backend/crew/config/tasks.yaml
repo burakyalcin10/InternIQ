@@ -1,0 +1,69 @@
+culture_research_task:
+  description: >
+    {company} şirketi hakkında kapsamlı bir kültür araştırması yap.
+    Aşağıdaki konuları ele al:
+
+    1. Şirketin genel çalışma kültürü ve değerleri
+    2. Stajyer ve yeni mezun deneyimleri
+    3. İş-yaşam dengesi ve çalışma koşulları
+    4. Kariyer gelişim fırsatları
+    5. Şirketin sektördeki itibarı ve konumu
+
+    Türkiye'deki {company} şirketi bağlamında araştırmanı yap.
+  expected_output: >
+    Markdown formatında yapılandırılmış bir kültür raporu:
+    - Çalışma Kültürü (2-3 paragraf)
+    - Stajyer Deneyimi (önemli noktalar)
+    - Artılar ve Eksiler (madde listesi)
+    - Genel Değerlendirme (1 paragraf)
+  agent: culture_researcher
+
+tech_analysis_task:
+  description: >
+    {company} şirketinin teknoloji altyapısını ve mühendislik
+    pratiklerini derinlemesine analiz et. Şunları araştır:
+
+    1. Kullanılan programlama dilleri ve framework'ler
+    2. Cloud altyapısı ve DevOps pratikleri
+    3. Açık kaynak katkıları ve GitHub aktivitesi
+    4. Teknik mülakat süreci ve sorulan soru tipleri
+    5. Stajyerlerin çalışacağı teknolojiler
+
+    Sonuçları {company} şirketine başvuracak bir yazılım
+    mühendisliği stajyerinin perspektifinden değerlendir.
+  expected_output: >
+    Markdown formatında yapılandırılmış bir teknoloji raporu:
+    - Teknoloji Stack'i (detaylı liste ve açıklamalar)
+    - Mühendislik Pratikleri (code review, CI/CD, testing vb.)
+    - Mülakat Süreci (aşamalar ve hazırlık tavsiyeleri)
+    - Stajyerler İçin Önerilen Teknolojiler (öncelikli öğrenilmesi gerekenler)
+  agent: tech_analyst
+
+compile_report_task:
+  description: >
+    Culture Researcher ve Tech Analyst'ın {company} hakkındaki
+    bulgularını sentezleyerek kapsamlı bir şirket istihbarat raporu
+    oluştur. Rapor şu bölümlerden oluşmalı:
+
+    1. Şirket Özeti (kısa tanıtım)
+    2. Kültür ve Çalışma Ortamı
+    3. Teknoloji Stack'i
+    4. Mülakat Hazırlık Rehberi
+    5. Artılar ve Eksiler (stajyer perspektifi)
+    6. Genel Değerlendirme ve Tavsiye
+
+    Rapor stajyer adaylarına yönelik, karar vermelerine
+    yardımcı olacak somut bilgiler içermeli.
+  expected_output: >
+    JSON formatında yapılandırılmış nihai rapor:
+    {
+      "company_summary": "Şirket hakkında 2-3 cümlelik özet",
+      "culture": "Kültür ve çalışma ortamı detaylı açıklama",
+      "tech_stack": ["Teknoloji 1", "Teknoloji 2", ...],
+      "interview_tips": ["Tavsiye 1", "Tavsiye 2", ...],
+      "pros": ["Artı 1", "Artı 2", ...],
+      "cons": ["Eksi 1", "Eksi 2", ...],
+      "overall_rating": "1-10 arası puan ve kısa gerekçe",
+      "recommendation": "Stajyer adayına genel tavsiye"
+    }
+  agent: report_writer

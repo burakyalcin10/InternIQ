@@ -1,170 +1,17 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="InternIQ — Staj sürecini uçtan uca yöneten AI platformu.">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="InternIQ — Staj sürecini uçtan uca yöneten AI platformu." />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <title>InternIQ — AI-Powered Internship Platform</title>
-  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
-  <!-- Nav -->
-  <nav class="nav">
-    <div class="nav-inner">
-      <a href="index.html" class="nav-brand">
-        <span class="dot"></span> InternIQ
-      </a>
-      <div class="nav-links" id="nav-links">
-        <a href="index.html" class="active">Ana Sayfa</a>
-        <a href="features.html">Özellikler</a>
-        <a href="about.html">Hakkında</a>
-        <a href="features.html#cv-section" class="nav-cta-link">Başla</a>
-      </div>
-      <button class="nav-toggle" id="nav-toggle" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- Hero -->
-  <section class="hero">
-    <div class="wrap">
-      <div class="hero-inner">
-        <span class="hero-tag">staj arama süreci, yeniden</span>
-        <h1>Doğru stajı bul,<br><em>hazırlığını AI'a bırak.</em></h1>
-        <p class="hero-desc">
-          İlanları tek yerde topla, CV'ni her pozisyona göre optimize et,
-          şirketi tanı, mülakata hazırlan. Hepsi bir platformda.
-        </p>
-        <div class="hero-btns">
-          <a href="features.html" class="btn btn-fill">Keşfet</a>
-          <a href="about.html#roadmap" class="btn btn-ghost">Yol haritası</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features — Bento -->
-  <section>
-    <div class="wrap">
-      <div class="section-head fade-in">
-        <span class="section-tag">Özellikler</span>
-        <h2 class="section-title">Dört modül, dört gerçek sorun.</h2>
-        <p class="section-desc">Her biri staj sürecinin farklı bir acısını çözmek için tasarlandı.</p>
-      </div>
-
-      <div class="bento fade-in">
-        <div class="bento-item">
-          <span class="bento-num">01</span>
-          <h3>Staj Radar</h3>
-          <p>LinkedIn, Kariyer.net, Indeed ve şirket sitelerinden ilanları otomatik tarar, sana özel filtreler.</p>
-          <span class="bento-tag">Akıllı Arama</span>
-        </div>
-        <div class="bento-item">
-          <span class="bento-num">02</span>
-          <h3>CV Tailorer</h3>
-          <p>İlan açıklamasını yapıştır, CV'ni o pozisyona göre yeniden düzenlesin. ATS skorunu anında gör.</p>
-          <span class="bento-tag">AI Optimizasyon</span>
-        </div>
-        <div class="bento-item">
-          <span class="bento-num">03</span>
-          <h3>Company Intel</h3>
-          <p>Başvurmadan önce şirket kültürünü, tech stack'ini, mülakat tarzını ve güncel haberlerini öğren.</p>
-          <span class="bento-tag">Derin Araştırma</span>
-        </div>
-        <div class="bento-item">
-          <span class="bento-num">04</span>
-          <h3>Mock Interview</h3>
-          <p>Pozisyona ve şirkete özel mülakat soruları ile pratik yap, anında değerlendirme al.</p>
-          <span class="bento-tag">Mülakat Koçu</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Metrics -->
-  <section>
-    <div class="wrap">
-      <div class="metrics fade-in">
-        <div class="metric">
-          <span class="metric-val" data-target="500" data-suffix="+">500+</span>
-          <span class="metric-label">Aktif Staj İlanı</span>
-        </div>
-        <div class="metric">
-          <span class="metric-val" data-target="50" data-suffix="+">50+</span>
-          <span class="metric-label">Şirket Profili</span>
-        </div>
-        <div class="metric">
-          <span class="metric-val" data-target="1200" data-suffix="+">1.2k+</span>
-          <span class="metric-label">Mülakat Sorusu</span>
-        </div>
-        <div class="metric">
-          <span class="metric-val" data-target="95" data-suffix="%">95%</span>
-          <span class="metric-label">ATS Uyumluluk</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- How it works -->
-  <section>
-    <div class="wrap">
-      <div class="section-head fade-in">
-        <span class="section-tag">Nasıl Çalışır</span>
-        <h2 class="section-title">Üç adımda staj başvurusu.</h2>
-      </div>
-      <div class="steps fade-in">
-        <div class="step">
-          <div class="step-num">01</div>
-          <h3>Profil oluştur</h3>
-          <p>CV'ni yükle, ilgi alanlarını belirle. AI profilini analiz etsin.</p>
-        </div>
-        <div class="step">
-          <div class="step-num">02</div>
-          <h3>İlanları keşfet</h3>
-          <p>Sana özel filtrelenmiş ilanları gör, eşleşme skorlarını incele.</p>
-        </div>
-        <div class="step">
-          <div class="step-num">03</div>
-          <h3>Hazırlan & başvur</h3>
-          <p>CV'ni optimize et, şirketi araştır, mülakata hazırlan.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Featured Listings -->
-  <section>
-    <div class="wrap">
-      <div class="section-head fade-in">
-        <span class="section-tag">Güncel İlanlar</span>
-        <h2 class="section-title">Öne çıkan staj fırsatları</h2>
-        <p class="section-desc">Türkiye'nin önde gelen teknoloji şirketlerinden.</p>
-      </div>
-      <div class="listing-list fade-in" id="listings-container"></div>
-      <div style="text-align:center; margin-top:28px;">
-        <a href="features.html" class="btn btn-ghost fade-in">Tüm ilanları gör</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="wrap">
-      <div class="footer-inner">
-        <div class="footer-brand"><span class="dot"></span> InternIQ</div>
-        <div class="footer-links">
-          <a href="features.html">Özellikler</a>
-          <a href="about.html">Hakkında</a>
-          <a href="about.html#roadmap">Yol Haritası</a>
-        </div>
-      </div>
-      <div class="footer-copy">© 2026 InternIQ. Tüm hakları saklıdır.</div>
-    </div>
-  </footer>
-
-  <script src="js/data.js"></script>
-  <script src="js/main.js"></script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

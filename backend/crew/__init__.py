@@ -1,0 +1,1 @@
+# CrewAI Company Research Module

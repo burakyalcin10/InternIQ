@@ -1,0 +1,360 @@
+[
+  {
+    "id": 1,
+    "company": "ASELSAN",
+    "logo": "🛡️",
+    "position": "Yazılım Mühendisliği Stajyeri",
+    "location": "Ankara, Türkiye",
+    "type": "On-site",
+    "tags": ["C/C++", "Embedded Systems", "FPGA", "Qt"],
+    "deadline": "2026-05-31",
+    "match_score": 88,
+    "source": "savunmakariyer.com",
+    "apply_url": "https://www.aselsan.com.tr/kariyer",
+    "program_name": "a Yetenek Yaz Stajı 2026",
+    "duration": "20-30 iş günü (Haziran-Ağustos)",
+    "department": "Savunma Sistem Teknolojileri",
+    "description": "ASELSAN 'a Yetenek Yaz Stajı' programı kapsamında gömülü yazılım ve sinyal işleme projelerinde çalışma fırsatı. Türkiye'nin en büyük savunma elektroniği şirketinde gerçek projelerde deneyim kazanın.",
+    "requirements": [
+      "Üniversite lisans 3. veya 4. sınıf öğrencisi olmak",
+      "Elektrik-Elektronik, Bilgisayar veya Yazılım Mühendisliği bölümü",
+      "C/C++ programlama bilgisi",
+      "Daha önce ASELSAN'da staj yapmamış olmak",
+      "Zorunlu staj dönemi olması tercih sebebi"
+    ],
+    "benefits": [
+      "Günlük yemek ve servis imkanı",
+      "Mentörlük programı",
+      "Proje bazlı çalışma deneyimi",
+      "Başarılı stajyerlere iş teklifi fırsatı"
+    ]
+  },
+  {
+    "id": 2,
+    "company": "TUSAŞ",
+    "logo": "✈️",
+    "position": "SKY Discover - Yazılım Stajyeri",
+    "location": "Ankara, Türkiye",
+    "type": "On-site",
+    "tags": ["Python", "C++", "MATLAB", "Avionics"],
+    "deadline": "2026-05-15",
+    "match_score": 85,
+    "source": "kariyer.tusas.com",
+    "apply_url": "https://kariyer.tusas.com/sky",
+    "program_name": "SKY Discover 2026",
+    "duration": "8-12 hafta (Haziran-Ağustos)",
+    "department": "Uçak Yazılım Tasarım Müdürlüğü",
+    "description": "TUSAŞ SKY Discover programı ile KAAN, Hürjet, ANKA gibi milli projelerde havacılık yazılımları üzerinde deneyim kazanın. Türkiye'nin en prestijli havacılık staj programı.",
+    "requirements": [
+      "Lisans 3. veya 4. sınıf mühendislik öğrencisi",
+      "Bilgisayar, Yazılım, Elektrik-Elektronik veya Havacılık Müh. bölümü",
+      "Genel not ortalaması en az 2.50/4.00",
+      "Python veya C++ programlama deneyimi",
+      "Havacılık/uzay alanına ilgi"
+    ],
+    "benefits": [
+      "Ücretli staj programı",
+      "KAAN, Hürjet, ANKA projelerine katkı",
+      "Deneyimli mühendislerden mentörlük",
+      "Kariyer yönlendirme",
+      "Sertifika ve referans mektubu"
+    ]
+  },
+  {
+    "id": 3,
+    "company": "BAYKAR",
+    "logo": "🚁",
+    "position": "Otonom Sistemler Stajyeri",
+    "location": "İstanbul, Türkiye",
+    "type": "On-site",
+    "tags": ["Python", "ROS", "Computer Vision", "Deep Learning"],
+    "deadline": "2026-04-30",
+    "match_score": 92,
+    "source": "baykartech.com",
+    "apply_url": "https://baykartech.com/tr/kariyer",
+    "program_name": "BAYKAR Yaz Stajı 2026",
+    "duration": "Minimum 4 hafta (Haziran-Ağustos)",
+    "department": "Otonom Uçuş ve Yapay Zeka Birimi",
+    "description": "Baykar İleri Teknoloji ekibinde Bayraktar TB2, AKINCI ve Kızılelma projelerinde İHA otonom uçuş, görüntü işleme ve yapay zeka projeleri üzerinde çalışma fırsatı.",
+    "requirements": [
+      "Bilgisayar, Yazılım, Mekatronik veya Elektrik-Elektronik Müh. 3-4. sınıf",
+      "Python ileri düzey bilgisi",
+      "Görüntü işleme veya makine öğrenmesi deneyimi (tercih)",
+      "ROS (Robot Operating System) bilgisi artı puan",
+      "Askeri yasak olmayan T.C. vatandaşı"
+    ],
+    "benefits": [
+      "Kızılelma ve AKINCI projelerine katkı",
+      "Yapay zeka araştırma ekibiyle çalışma",
+      "Yüksek performanslı işe alım oranı",
+      "Son teknoloji test altyapısı kullanımı"
+    ]
+  },
+  {
+    "id": 4,
+    "company": "HAVELSAN",
+    "logo": "💻",
+    "position": "HİT Yaz Staj - Yazılım Geliştirici",
+    "location": "Ankara, Türkiye",
+    "type": "On-site",
+    "tags": ["Java", "React", "Microservices", "DevOps"],
+    "deadline": "2026-05-20",
+    "match_score": 83,
+    "source": "havelsan.com.tr",
+    "apply_url": "https://www.havelsan.com.tr/kariyer",
+    "program_name": "HİT (HAVELSAN İleri Teknoloji) Staj Programı 2026",
+    "duration": "4-6 hafta (Temmuz-Ağustos)",
+    "department": "Yazılım Geliştirme Direktörlüğü",
+    "description": "HAVELSAN HİT Staj Programı ile siber güvenlik, simülasyon ve komuta kontrol yazılımları geliştiren profesyonel ekiplerle çalışma fırsatı.",
+    "requirements": [
+      "Lisans 3. veya 4. sınıf öğrencisi",
+      "Bilgisayar veya Yazılım Mühendisliği bölümü",
+      "Java ve/veya React bilgisi",
+      "Veritabanı (SQL) temel bilgisi",
+      "Zorunlu staj dönemi tercih sebebi"
+    ],
+    "benefits": [
+      "Yapılandırılmış staj programı",
+      "Gerçek proje deneyimi",
+      "Savunma sektöründe networking",
+      "Başarılı stajyerlere kariyer fırsatı"
+    ]
+  },
+  {
+    "id": 5,
+    "company": "ROKETSAN",
+    "logo": "🚀",
+    "position": "STAGE - Yazılım ve Simülasyon Stajyeri",
+    "location": "Ankara, Türkiye",
+    "type": "On-site",
+    "tags": ["C++", "Python", "Simulation", "Control Systems"],
+    "deadline": "2026-05-10",
+    "match_score": 86,
+    "source": "roketsan.com.tr",
+    "apply_url": "https://www.roketsan.com.tr/tr/kariyer",
+    "program_name": "STAGE Staj Programı 2026",
+    "duration": "4-8 hafta (Haziran-Ağustos)",
+    "department": "Yazılım ve Simülasyon Müdürlüğü",
+    "description": "ROKETSAN STAGE programında füze yönlendirme, kontrol algoritmaları ve simülasyon yazılımları üzerinde çalışma deneyimi. Hipersonik ve akıllı mühimmat projeleri.",
+    "requirements": [
+      "Mühendislik 3. veya 4. sınıf öğrencisi",
+      "C++ ve/veya Python programlama bilgisi",
+      "Kontrol sistemleri veya sayısal analiz dersleri almış olmak",
+      "MATLAB/Simulink bilgisi artı puan"
+    ],
+    "benefits": [
+      "Ücretli staj",
+      "Yüksek teknoloji projelere katılım",
+      "STAGE Technical programına geçiş imkanı",
+      "Uzman mühendislerden mentorluk"
+    ]
+  },
+  {
+    "id": 6,
+    "company": "Softtech (İşbank)",
+    "logo": "🏦",
+    "position": "Road to Tech - Yazılım Geliştirme Stajyeri",
+    "location": "İstanbul, Türkiye",
+    "type": "Hybrid",
+    "tags": ["Java", "Spring Boot", "React", "Kubernetes"],
+    "deadline": "2026-05-30",
+    "match_score": 91,
+    "source": "softtech.com.tr",
+    "apply_url": "https://softtech.com.tr/kariyer",
+    "program_name": "Road to Tech 2026",
+    "duration": "3 ay (Haziran-Eylül)",
+    "department": "Digital Banking Yazılım Ekibi",
+    "description": "İş Bankası'nın teknoloji şirketi Softtech'te mikroservis mimarileri, bulut teknolojileri ve bankacılık yazılımları üzerinde 3 aylık kapsamlı staj programı.",
+    "requirements": [
+      "3. veya 4. sınıf üniversite öğrencisi",
+      "Bilgisayar, Yazılım veya ilgili mühendislik bölümü",
+      "Java veya benzer OOP dili bilgisi",
+      "REST API ve web teknolojileri bilgisi tercih sebebi",
+      "Git versiyon kontrol bilgisi"
+    ],
+    "benefits": [
+      "Ücretli staj (piyasa üzeri)",
+      "Hibrit çalışma modeli",
+      "Buddy sistemiyle mentorluk",
+      "Teknik eğitim programları",
+      "İşe alım fırsatı"
+    ]
+  },
+  {
+    "id": 7,
+    "company": "Bilişim Vadisi",
+    "logo": "🏢",
+    "position": "Stajyer İstihdamı - AI/ML Projesi",
+    "location": "Kocaeli, Türkiye",
+    "type": "On-site",
+    "tags": ["Python", "TensorFlow", "NLP", "Data Science"],
+    "deadline": "2026-06-01",
+    "match_score": 79,
+    "source": "bilisimvadisi.com.tr",
+    "apply_url": "https://bilisimvadisi.com.tr",
+    "program_name": "Bilişim Vadisi Stajyer İstihdamı 2026",
+    "duration": "4-8 hafta",
+    "department": "Yapay Zeka ve Veri Bilimi",
+    "description": "Bilişim Vadisi bünyesindeki teknoloji firmalarında yapay zeka, makine öğrenmesi ve veri bilimi projelerinde staj. 42 Türkiye öğrencileri de başvurabilir.",
+    "requirements": [
+      "Lisans 3. veya 4. sınıf öğrencisi",
+      "Bilgisayar, Yazılım, Matematik veya İstatistik bölümü",
+      "Python ve veri analizi kütüphaneleri bilgisi",
+      "Makine öğrenmesi temel kavramlarına hakimiyet"
+    ],
+    "benefits": [
+      "Sivil teknoloji alanında projeler",
+      "Startup ekosistemine erişim",
+      "Networking fırsatları",
+      "42 Türkiye ile işbirliği"
+    ]
+  },
+  {
+    "id": 8,
+    "company": "Trendyol",
+    "logo": "🛒",
+    "position": "Yazılım Mühendisliği Yaz Stajı",
+    "location": "İstanbul, Türkiye",
+    "type": "Hybrid",
+    "tags": ["Java", "Kotlin", "Kafka", "Microservices"],
+    "deadline": "2026-05-15",
+    "match_score": 94,
+    "source": "youthall.com",
+    "apply_url": "https://www.trendyol.com/kariyer",
+    "program_name": "Trendyol Tech Internship 2026",
+    "duration": "8-12 hafta (Haziran-Ağustos)",
+    "department": "Core Engineering",
+    "description": "Türkiye'nin en büyük e-ticaret platformu Trendyol'da milyonlarca kullanıcıya hizmet eden altyapı üzerinde staj. Günde milyarlarca istek işleyen sistemlerde deneyim.",
+    "requirements": [
+      "3. veya 4. sınıf mühendislik öğrencisi",
+      "Java, Kotlin veya Go bilgisi",
+      "Veri yapıları ve algoritmalar bilgisi",
+      "Distributed systems kavramlarına aşinalık (tercih)"
+    ],
+    "benefits": [
+      "Ücretli staj",
+      "Hibrit çalışma modeli",
+      "Dünya ölçeğinde trafik deneyimi",
+      "Kariyer koçluğu ve teknik eğitimler"
+    ]
+  },
+  {
+    "id": 9,
+    "company": "Insider",
+    "logo": "📊",
+    "position": "Full Stack Geliştirici Stajyeri",
+    "location": "İstanbul, Türkiye",
+    "type": "Hybrid",
+    "tags": ["React", "Go", "PostgreSQL", "AWS"],
+    "deadline": "2026-04-30",
+    "match_score": 95,
+    "source": "youthall.com",
+    "apply_url": "https://useinsider.com/careers",
+    "program_name": "Insider Internship Program 2026",
+    "duration": "8 hafta minimum",
+    "department": "Product Engineering",
+    "description": "Gartner Magic Quadrant lideri Insider'da AI destekli pazarlama araçları geliştirin. 30+ ülkede 1200+ müşteriye hizmet eden SaaS ürünleri.",
+    "requirements": [
+      "Bilgisayar veya Yazılım Mühendisliği 3-4. sınıf",
+      "React ve/veya backend deneyimi",
+      "REST API tasarımı bilgisi",
+      "Git kullanımı",
+      "İngilizce iletişim yeteneği (global ekip)"
+    ],
+    "benefits": [
+      "Ücretli staj",
+      "Global ürün ekibinde çalışma",
+      "Pair programming kültürü",
+      "Take-home proje ile değerlendirme",
+      "İşe alım fırsatı"
+    ]
+  },
+  {
+    "id": 10,
+    "company": "Mercedes-Benz Otomotiv",
+    "logo": "⭐",
+    "position": "IT & Dijital Dönüşüm Stajyeri",
+    "location": "İstanbul, Türkiye",
+    "type": "Hybrid",
+    "tags": ["SAP", "Power BI", "Python", "Azure"],
+    "deadline": "2026-05-20",
+    "match_score": 76,
+    "source": "youthall.com",
+    "apply_url": "https://youthall.com/tr/mercedesbenzotomotiv",
+    "program_name": "Mercedes-Benz Türkiye Staj Programı 2026",
+    "duration": "6-8 hafta",
+    "department": "IT & Dijital Dönüşüm",
+    "description": "Mercedes-Benz Türkiye'nin dijital dönüşüm ekibinde veri analitiği, otomasyon ve iş süreçleri iyileştirme projeleri üzerinde staj.",
+    "requirements": [
+      "Üniversite 3. veya 4. sınıf öğrencisi",
+      "Mühendislik veya ilgili bölüm",
+      "Excel ve veri analizi becerisi",
+      "Python veya Power BI bilgisi artı puan",
+      "SAP bilgisi tercih sebebi"
+    ],
+    "benefits": [
+      "Global marka deneyimi",
+      "Hibrit çalışma",
+      "Mentorluk programı",
+      "Otomotiv sektörü networkü"
+    ]
+  },
+  {
+    "id": 11,
+    "company": "Enerjisa",
+    "logo": "⚡",
+    "position": "SPARK - Yazılım ve Veri Stajyeri",
+    "location": "İstanbul, Türkiye",
+    "type": "Hybrid",
+    "tags": ["Python", "Data Analytics", "IoT", "Cloud"],
+    "deadline": "2026-05-15",
+    "match_score": 74,
+    "source": "enerjisa.com.tr",
+    "apply_url": "https://www.enerjisa.com.tr/kariyer",
+    "program_name": "SPARK Yaz Staj Programı 2026",
+    "duration": "6 hafta (Temmuz-Ağustos)",
+    "department": "Dijital Teknolojiler",
+    "description": "Enerjisa SPARK hibrit yaz staj programında enerji sektörünün dijital dönüşümüne katkıda bulunun. IoT sensörleri ve veri analitiği projeleri.",
+    "requirements": [
+      "Mühendislik 3. veya 4. sınıf öğrencisi",
+      "Python temel bilgisi",
+      "Veri analizi veya makine öğrenmesine ilgi",
+      "Enerji sektörüne merak"
+    ],
+    "benefits": [
+      "Ücretli staj",
+      "Hibrit çalışma",
+      "Enerji sektörü deneyimi",
+      "Proje sunumu ve sertifika"
+    ]
+  },
+  {
+    "id": 12,
+    "company": "Commencis",
+    "logo": "📱",
+    "position": "Mobil Geliştirici Stajyeri (iOS/Android)",
+    "location": "İstanbul, Türkiye",
+    "type": "On-site",
+    "tags": ["Swift", "Kotlin", "Flutter", "Firebase"],
+    "deadline": "2026-05-15",
+    "match_score": 87,
+    "source": "youthall.com",
+    "apply_url": "https://youthall.com/tr/Commencis",
+    "program_name": "Commencis Summer Internship 2026",
+    "duration": "8 hafta",
+    "department": "Mobile Engineering",
+    "description": "Büyük markaların mobil uygulamalarını geliştiren Commencis'te iOS veya Android platformu üzerinde staj. Big data ve cloud projelerine katkı.",
+    "requirements": [
+      "Bilgisayar veya Yazılım Mühendisliği 3-4. sınıf",
+      "Swift, Kotlin veya Flutter deneyimi",
+      "Mobil uygulama geliştirme tecrübesi (kişisel projeler yeterli)",
+      "Git ve versiyon kontrolü bilgisi"
+    ],
+    "benefits": [
+      "Büyük marka projeleri",
+      "Mentörlük",
+      "Teknik eğitim serisi",
+      "İşe alım değerlendirmesi"
+    ]
+  }
+]
