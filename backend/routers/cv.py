@@ -31,7 +31,7 @@ def analyze_with_gemini(cv_text: str, job_description: str) -> dict:
     try:
         import google.generativeai as genai
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash")
 
         prompt = f"""Sen bir kariyer danışmanı ve CV uzmanısın. Aşağıdaki CV'yi ve iş ilanı açıklamasını analiz et.
 
