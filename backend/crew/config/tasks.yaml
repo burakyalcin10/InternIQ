@@ -1,69 +1,70 @@
 culture_research_task:
   description: >
-    {company} şirketi hakkında kapsamlı bir kültür araştırması yap.
-    Aşağıdaki konuları ele al:
+    Conduct a comprehensive culture research on {company}. Cover the
+    following topics:
 
-    1. Şirketin genel çalışma kültürü ve değerleri
-    2. Stajyer ve yeni mezun deneyimleri
-    3. İş-yaşam dengesi ve çalışma koşulları
-    4. Kariyer gelişim fırsatları
-    5. Şirketin sektördeki itibarı ve konumu
+    1. Overall work culture and company values
+    2. Intern and new graduate experiences
+    3. Work-life balance and working conditions
+    4. Career development opportunities
+    5. Company reputation and position in the industry
 
-    Türkiye'deki {company} şirketi bağlamında araştırmanı yap.
+    Focus your research on {company} within the Turkish market context.
+    Write your findings in Turkish.
   expected_output: >
-    Markdown formatında yapılandırılmış bir kültür raporu:
-    - Çalışma Kültürü (2-3 paragraf)
-    - Stajyer Deneyimi (önemli noktalar)
-    - Artılar ve Eksiler (madde listesi)
-    - Genel Değerlendirme (1 paragraf)
+    A structured culture report in Markdown format (in Turkish):
+    - Work Culture (2-3 paragraphs)
+    - Intern Experience (key points)
+    - Pros and Cons (bullet list)
+    - Overall Assessment (1 paragraph)
   agent: culture_researcher
 
 tech_analysis_task:
   description: >
-    {company} şirketinin teknoloji altyapısını ve mühendislik
-    pratiklerini derinlemesine analiz et. Şunları araştır:
+    Perform an in-depth analysis of {company}'s technology infrastructure
+    and engineering practices. Research the following:
 
-    1. Kullanılan programlama dilleri ve framework'ler
-    2. Cloud altyapısı ve DevOps pratikleri
-    3. Açık kaynak katkıları ve GitHub aktivitesi
-    4. Teknik mülakat süreci ve sorulan soru tipleri
-    5. Stajyerlerin çalışacağı teknolojiler
+    1. Programming languages and frameworks used
+    2. Cloud infrastructure and DevOps practices
+    3. Open-source contributions and GitHub activity
+    4. Technical interview process and question types
+    5. Technologies that interns will work with
 
-    Sonuçları {company} şirketine başvuracak bir yazılım
-    mühendisliği stajyerinin perspektifinden değerlendir.
+    Evaluate findings from the perspective of a software engineering intern
+    candidate applying to {company}. Write your analysis in Turkish.
   expected_output: >
-    Markdown formatında yapılandırılmış bir teknoloji raporu:
-    - Teknoloji Stack'i (detaylı liste ve açıklamalar)
-    - Mühendislik Pratikleri (code review, CI/CD, testing vb.)
-    - Mülakat Süreci (aşamalar ve hazırlık tavsiyeleri)
-    - Stajyerler İçin Önerilen Teknolojiler (öncelikli öğrenilmesi gerekenler)
+    A structured technology report in Markdown format (in Turkish):
+    - Technology Stack (detailed list with explanations)
+    - Engineering Practices (code review, CI/CD, testing, etc.)
+    - Interview Process (stages and preparation tips)
+    - Recommended Technologies for Interns (priority learning list)
   agent: tech_analyst
 
 compile_report_task:
   description: >
-    Culture Researcher ve Tech Analyst'ın {company} hakkındaki
-    bulgularını sentezleyerek kapsamlı bir şirket istihbarat raporu
-    oluştur. Rapor şu bölümlerden oluşmalı:
+    Synthesize the findings from the Culture Researcher and Tech Analyst
+    about {company} into a comprehensive company intelligence report.
+    The report should contain the following sections:
 
-    1. Şirket Özeti (kısa tanıtım)
-    2. Kültür ve Çalışma Ortamı
-    3. Teknoloji Stack'i
-    4. Mülakat Hazırlık Rehberi
-    5. Artılar ve Eksiler (stajyer perspektifi)
-    6. Genel Değerlendirme ve Tavsiye
+    1. Company Summary (brief introduction)
+    2. Culture and Work Environment
+    3. Technology Stack
+    4. Interview Preparation Guide
+    5. Pros and Cons (from an intern's perspective)
+    6. Overall Rating and Recommendation
 
-    Rapor stajyer adaylarına yönelik, karar vermelerine
-    yardımcı olacak somut bilgiler içermeli.
+    The report must contain concrete, actionable information to help
+    intern candidates make informed decisions. Write in Turkish.
   expected_output: >
-    JSON formatında yapılandırılmış nihai rapor:
+    A final report in JSON format (with Turkish content):
     {
-      "company_summary": "Şirket hakkında 2-3 cümlelik özet",
-      "culture": "Kültür ve çalışma ortamı detaylı açıklama",
-      "tech_stack": ["Teknoloji 1", "Teknoloji 2", ...],
-      "interview_tips": ["Tavsiye 1", "Tavsiye 2", ...],
-      "pros": ["Artı 1", "Artı 2", ...],
-      "cons": ["Eksi 1", "Eksi 2", ...],
-      "overall_rating": "1-10 arası puan ve kısa gerekçe",
-      "recommendation": "Stajyer adayına genel tavsiye"
+      "company_summary": "2-3 sentence summary about the company",
+      "culture": "Detailed description of culture and work environment",
+      "tech_stack": ["Technology 1", "Technology 2", ...],
+      "interview_tips": ["Tip 1", "Tip 2", ...],
+      "pros": ["Pro 1", "Pro 2", ...],
+      "cons": ["Con 1", "Con 2", ...],
+      "overall_rating": "Score out of 10 with brief justification",
+      "recommendation": "General advice for intern candidates"
     }
   agent: report_writer

@@ -1,37 +1,66 @@
 # InternIQ — AI-Powered Internship Platform
 
-AI destekli staj arama platformu. Doğru stajı bul, hazırlığını AI'a bırak.
+AI-powered internship search platform. Find the right internship, let AI handle the preparation.
 
-## 🚀 Proje Hakkında
+## 🚀 About the Project
 
-InternIQ, üniversite öğrencilerinin staj arama sürecini uçtan uca otomatize eden bir AI platformudur. Dört temel modül ile çalışır:
+InternIQ is an AI platform that automates the end-to-end internship application process for university students. It operates through four core modules:
 
-1. **🔍 Staj Radar** — Birden fazla platformdan ilanları toplar ve filtreler
-2. **📄 CV Tailorer** — İlan bazlı CV optimizasyonu ve ATS skor analizi
-3. **🏢 Company Intel** — Şirket kültürü, tech stack ve mülakat bilgileri
-4. **🎤 Mock Interview** — Pozisyona özel mülakat simülasyonu
+1. **🔍 Staj Radar** — Aggregates internship listings from multiple platforms with search & filtering
+2. **📄 CV Tailorer** — AI-powered CV optimization with ATS score analysis (Gemini AI)
+3. **🏢 Company Intel** — Company culture, tech stack & interview insights via CrewAI multi-agent research
+4. **🎤 Mock Interview** — Position-specific interview simulation with instant feedback
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **React 18** + **Vite** — SPA, client-side routing
-- **Framer Motion** — Animasyonlar
-- **Lucide React** — İkon seti
-- **CSS Design System** — Custom dark theme
+- **React 18** + **Vite** — Single Page Application with client-side routing
+- **Framer Motion** — Smooth animations and micro-interactions
+- **Lucide React** — Modern icon set
+- **Custom CSS Design System** — Dark theme with glassmorphism
 
 ### Backend
-- **FastAPI** (Python) — REST API
-- **Supabase** (PostgreSQL) — Veritabanı
+- **FastAPI** (Python 3.11) — REST API with automatic OpenAPI docs
 - **Uvicorn** — ASGI server
+- **Supabase** — PostgreSQL database (planned migration)
 
-### AI (Planlanan)
-- **OpenAI SDK** — CV analizi (Hafta 2)
-- **CrewAI** — Multi-agent araştırma (Hafta 3)
-- **LangGraph** — Stateful interview (Hafta 4)
-- **AutoGen** — Otonom ilan tarama (Hafta 5)
-- **MCP** — Platform entegrasyonları (Hafta 6)
+### AI Integrations
+- **CrewAI** — Multi-agent company research (3 agents: Culture Researcher, Tech Analyst, Report Writer)
+- **Google Gemini** — CV analysis and ATS scoring
+- **OpenAI GPT-4o-mini** — LLM backbone for CrewAI agents
 
-## 📦 Kurulum
+## 🤖 CrewAI Architecture
+
+The Company Intel module uses a 3-agent crew with sequential processing:
+
+```
+User selects company → POST /api/v1/crew/research
+                            │
+                            ▼
+                ┌─────────────────────┐
+                │  Culture Researcher │  → Analyzes work culture, intern experiences
+                └──────────┬──────────┘
+                           │
+                           ▼
+                ┌─────────────────────┐
+                │   Tech Analyst      │  → Researches tech stack, interview process
+                └──────────┬──────────┘
+                           │
+                           ▼
+                ┌─────────────────────┐
+                │   Report Writer     │  → Synthesizes into structured JSON report
+                └──────────┬──────────┘
+                           │
+                           ▼
+                  Final Intelligence Report
+                  (displayed in React UI)
+```
+
+- **Config files**: `backend/crew/config/agents.yaml` & `tasks.yaml`
+- **Kickoff code**: `backend/crew/company_crew.py` → `run_crew()`
+- **Fallback**: Pre-built reports when API keys are unavailable
+
+## 📦 Setup
 
 ### Frontend
 ```bash
@@ -45,28 +74,48 @@ cd backend
 python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
 copy .env.example .env
+# Fill in API keys in .env
 .venv\Scripts\python -m uvicorn main:app --reload
 ```
 
-## 📁 Proje Yapısı
+### Environment Variables
+| Variable | Required | Used For |
+|----------|----------|----------|
+| `OPENAI_API_KEY` | For real CrewAI | Company research AI agents |
+| `GEMINI_API_KEY` | For real CV analysis | CV Tailorer Gemini AI mode |
+| `CORS_ORIGINS` | Yes | Allowed frontend domains |
+
+## 🌐 Deployment
+
+| Service | Platform | URL |
+|---------|----------|-----|
+| Frontend | Vercel | [intern-iq-iota.vercel.app](https://intern-iq-iota.vercel.app) |
+| Backend | Render | [interniq-api.onrender.com](https://interniq-api.onrender.com) |
+
+## 📁 Project Structure
 
 ```
 InternIQ/
-├── src/                    # React Frontend
-│   ├── components/         # UI Componentleri
-│   ├── pages/              # Sayfa componentleri
-│   ├── services/           # API service layer
-│   ├── hooks/              # Custom React hooks
-│   └── index.css           # Design system
-├── backend/                # FastAPI Backend
-│   ├── routers/            # API endpoint'leri
-│   ├── services/           # Business logic
-│   ├── data/               # JSON veri dosyaları
-│   └── main.py             # FastAPI app
-├── docs/                   # Dokümantasyon
-└── package.json
+├── src/                        # React Frontend
+│   ├── components/             # UI Components (ListingList, CVTailorer, CompanyCards, MockInterview, etc.)
+│   ├── pages/                  # Page components (Home, Features, CompanyResearch, ListingDetail, About)
+│   ├── services/api.js         # API service layer
+│   ├── hooks/                  # Custom React hooks
+│   └── index.css               # Design system
+├── backend/                    # FastAPI Backend
+│   ├── main.py                 # FastAPI app entry point
+│   ├── routers/                # API endpoints (listings, companies, cv, interview, crew)
+│   ├── crew/                   # CrewAI Module
+│   │   ├── company_crew.py     # Agent creation, task assignment & crew kickoff
+│   │   └── config/
+│   │       ├── agents.yaml     # Agent role, goal & backstory definitions
+│   │       └── tasks.yaml      # Task descriptions & expected outputs
+│   ├── data/                   # JSON data files (listings, companies)
+│   └── requirements.txt        # Python dependencies
+└── docs/
+    └── AI_Agent_Planning.md    # Comprehensive AI agent planning document
 ```
 
-## 📝 Lisans
+## 📝 License
 
-© 2026 InternIQ. Tüm hakları saklıdır.
+© 2026 InternIQ. All rights reserved.

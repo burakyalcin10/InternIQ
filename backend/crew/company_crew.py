@@ -134,7 +134,7 @@ def run_crew(company_name: str) -> dict:
 
     # --- Real CrewAI execution ---
     try:
-        from crewai import Agent, Task, Crew, Process
+        from crewai import Agent, Task, Crew, Process, LLM
 
         config_dir = Path(__file__).parent / "config"
 
@@ -144,6 +144,9 @@ def run_crew(company_name: str) -> dict:
         with open(config_dir / "tasks.yaml", "r", encoding="utf-8") as f:
             tasks_config = yaml.safe_load(f)
 
+        # LLM — use gpt-4o-mini for cost efficiency (~1-2 cents per request)
+        llm = LLM(model="gpt-4o-mini", temperature=0.7, max_tokens=1024)
+
         # Create Agents
         culture_researcher = Agent(
             role=agents_config["culture_researcher"]["role"].format(company=company_name),
@@ -151,6 +154,7 @@ def run_crew(company_name: str) -> dict:
             backstory=agents_config["culture_researcher"]["backstory"].format(company=company_name),
             verbose=True,
             allow_delegation=False,
+            llm=llm,
         )
 
         tech_analyst = Agent(
@@ -159,6 +163,7 @@ def run_crew(company_name: str) -> dict:
             backstory=agents_config["tech_analyst"]["backstory"].format(company=company_name),
             verbose=True,
             allow_delegation=False,
+            llm=llm,
         )
 
         report_writer = Agent(
@@ -167,6 +172,7 @@ def run_crew(company_name: str) -> dict:
             backstory=agents_config["report_writer"]["backstory"].format(company=company_name),
             verbose=True,
             allow_delegation=False,
+            llm=llm,
         )
 
         # Create Tasks
@@ -193,24 +199,31 @@ def run_crew(company_name: str) -> dict:
             agents=[culture_researcher, tech_analyst, report_writer],
             tasks=[culture_task, tech_task, report_task],
             process=Process.sequential,
-            verbose=True,
+            verbose=False,
         )
 
         result = company_crew.kickoff(inputs={"company": company_name})
 
-        # Parse the result
+        # Parse the result — strip markdown code blocks if present
+        raw = str(result).strip()
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
+        if raw.endswith("```"):
+            raw = raw.rsplit("```", 1)[0]
+        raw = raw.strip()
+
         try:
-            report = json.loads(str(result))
+            report = json.loads(raw)
         except json.JSONDecodeError:
             report = {
-                "company_summary": str(result),
+                "company_summary": raw,
                 "culture": "AI tarafından üretilen rapor — detaylar özet bölümünde.",
                 "tech_stack": [],
                 "interview_tips": [],
                 "pros": [],
                 "cons": [],
                 "overall_rating": "AI analizi tamamlandı",
-                "recommendation": str(result)
+                "recommendation": raw
             }
 
         return {
