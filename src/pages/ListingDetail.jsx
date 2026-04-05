@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   ArrowLeft, MapPin, Clock, Calendar, Building2, ExternalLink,
-  CheckCircle2, Gift, Loader2, Briefcase, Timer, Users
+  CheckCircle2, Gift, Loader2, Briefcase, Timer, Users, Sparkles
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { getListing } from '../services/api'
@@ -232,6 +232,14 @@ export default function ListingDetail() {
                     )}
                   </div>
                 </div>
+
+                <Link
+                  to={`/company-research/${encodeURIComponent(listing.company)}`}
+                  className="btn btn-primary detail__ai-btn"
+                >
+                  <Sparkles size={16} />
+                  AI Şirket Analizi
+                </Link>
               </div>
             </div>
           </motion.div>
