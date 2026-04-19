@@ -91,6 +91,17 @@
   margin-top: var(--space-md);
 }
 
+.workflow__saved-cv-note {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: var(--emerald);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
 .workflow__steps-panel {
   margin-top: var(--space-md);
   padding-top: var(--space-md);
@@ -265,6 +276,10 @@
   flex-shrink: 0;
 }
 
+.workflow__result-meta {
+  margin-top: var(--space-md);
+}
+
 .workflow__score-val {
   font-size: 1.5rem;
   font-weight: 700;
@@ -358,6 +373,23 @@
   counter-increment: item;
 }
 
+.workflow__interview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-lg);
+}
+
+.workflow__interview-column {
+  min-width: 0;
+}
+
+.workflow__interview-title {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 0.84rem;
+  color: var(--text-primary);
+}
+
 .workflow__plan-summary {
   padding: var(--space-md);
   background: var(--bg-elevated);
@@ -411,6 +443,10 @@
 
 @media (max-width: 768px) {
   .workflow__result-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .workflow__interview-grid {
     grid-template-columns: 1fr;
   }
 }
