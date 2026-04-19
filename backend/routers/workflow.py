@@ -1,20 +1,22 @@
 """Workflow Router - LangGraph application preparation workflow."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Header
 from pydantic import BaseModel
 
 from langgraph_workflow.graph import workflow_graph
+from services.profile_store import get_profile, summarize_cv_profile
+from services.supabase_auth import get_authenticated_user
 
 router = APIRouter()
 
 WORKFLOW_STEPS = [
-    {"id": "analyze_listing", "title": "Ilan Analizi"},
-    {"id": "evaluate_cv", "title": "CV Degerlendirme"},
-    {"id": "check_cv_score", "title": "CV Skor Kontrolu"},
-    {"id": "suggest_improvements", "title": "CV Iyilestirme Onerileri"},
-    {"id": "research_company", "title": "Sirket Arastirmasi"},
-    {"id": "generate_interview_prep", "title": "Mulakat Hazirligi"},
-    {"id": "create_action_plan", "title": "Aksiyon Plani"},
+    {"id": "analyze_listing", "title": "İlan Analizi"},
+    {"id": "evaluate_cv", "title": "CV Değerlendirme"},
+    {"id": "check_cv_score", "title": "CV Skor Kontrolü"},
+    {"id": "suggest_improvements", "title": "CV İyileştirme Önerileri"},
+    {"id": "research_company", "title": "Şirket Araştırması"},
+    {"id": "generate_interview_prep", "title": "Mülakat Hazırlığı"},
+    {"id": "create_action_plan", "title": "Aksiyon Planı"},
 ]
 
 
@@ -24,7 +26,10 @@ class PrepareRequest(BaseModel):
 
 
 @router.post("/workflow/prepare")
-async def prepare_application(req: PrepareRequest):
+async def prepare_application(
+    req: PrepareRequest,
+    authorization: str | None = Header(default=None),
+):
     """
     Run the LangGraph application preparation workflow.
 
@@ -36,9 +41,50 @@ async def prepare_application(req: PrepareRequest):
       5. generate_interview_prep -> Company-specific questions
       6. create_action_plan -> Personalized action plan
     """
+    cv_text = req.cv_text.strip()
+    cv_source = "manual"
+    profile = None
+
+    if not cv_text:
+        user = get_authenticated_user(authorization)
+        profile = get_profile(str(user.id)) if user else None
+        saved_cv = profile.get("cv_text", "") if profile else ""
+        if saved_cv.strip():
+            cv_text = saved_cv
+            cv_source = "profile"
+        else:
+            cv_source = "empty"
+
+    if profile and cv_source == "profile":
+        candidate_profile = {
+            "summary": profile.get("summary", ""),
+            "skills": profile.get("skills", []),
+            "education_summary": profile.get("education_summary", ""),
+            "experience_level": profile.get("experience_level", ""),
+            "projects": profile.get("projects", []),
+        }
+    elif cv_text.strip():
+        derived = summarize_cv_profile(cv_text)
+        candidate_profile = {
+            "summary": derived.get("summary", ""),
+            "skills": derived.get("skills", []),
+            "education_summary": derived.get("education_summary", ""),
+            "experience_level": derived.get("experience_level", ""),
+            "projects": derived.get("projects", []),
+        }
+    else:
+        candidate_profile = {
+            "summary": "",
+            "skills": [],
+            "education_summary": "",
+            "experience_level": "",
+            "projects": [],
+        }
+
     initial_state = {
         "listing_id": req.listing_id,
-        "cv_text": req.cv_text,
+        "cv_text": cv_text,
+        "candidate_profile": candidate_profile,
         "listing_data": {},
         "job_requirements": [],
         "job_description": "",
@@ -49,8 +95,10 @@ async def prepare_application(req: PrepareRequest):
         "company_name": "",
         "company_info": {},
         "interview_questions": [],
+        "interview_sections": {},
         "action_plan": {},
         "status": "fallback",
+        "llm_provider": "fallback",
     }
 
     result = workflow_graph.invoke(initial_state)
@@ -67,6 +115,9 @@ async def prepare_application(req: PrepareRequest):
         "cv_suggestions": result.get("cv_suggestions", []),
         "company_info": result.get("company_info", {}),
         "interview_questions": result.get("interview_questions", []),
+        "interview_sections": result.get("interview_sections", {}),
         "action_plan": result.get("action_plan", {}),
         "status": result.get("status", "fallback"),
+        "llm_provider": result.get("llm_provider", "fallback"),
+        "cv_source": cv_source,
     }
