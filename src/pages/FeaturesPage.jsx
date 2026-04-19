@@ -1,22 +1,22 @@
-import ListingList from '../components/ListingList'
-import CVTailorer from '../components/CVTailorer'
-import CompanyCards from '../components/CompanyCards'
-import MockInterview from '../components/MockInterview'
 import ApplicationWorkflow from '../components/ApplicationWorkflow'
+import CompanyCards from '../components/CompanyCards'
+import CVTailorer from '../components/CVTailorer'
+import ListingList from '../components/ListingList'
+import MockInterview from '../components/MockInterview'
 
 export default function FeaturesPage() {
   return (
     <>
       <div className="page-top">
         <div className="wrap">
-          <span className="section-tag">Tum Ozellikler</span>
+          <span className="section-tag">Tüm Özellikler</span>
           <h1 className="section-title">
-            Staj surecini donusturen
+            Staj sürecini dönüştüren
             <br />
-            <span className="text-gradient">bes temel modul.</span>
+            <span className="text-gradient">beş temel modül.</span>
           </h1>
           <p className="section-desc">
-            Her modul, basvuru surecinin farkli bir asamasini otomatize eder.
+            Her modül, başvuru sürecinin farklı bir aşamasını otomatize eder.
           </p>
         </div>
       </div>
@@ -25,9 +25,9 @@ export default function FeaturesPage() {
         <div className="wrap">
           <div className="section-head">
             <span className="section-tag">01 · Staj Radar</span>
-            <h2 className="section-title">Tum ilanlar, tek yerde.</h2>
+            <h2 className="section-title">Tüm ilanlar, tek yerde.</h2>
             <p className="section-desc">
-              LinkedIn, Kariyer.net, Indeed ve sirket sitelerinden toplanan staj ilanlari.
+              LinkedIn, Kariyer.net, Indeed ve şirket sitelerinden toplanan staj ilanları.
             </p>
           </div>
           <ListingList />
@@ -40,9 +40,9 @@ export default function FeaturesPage() {
         <div className="wrap">
           <div className="section-head">
             <span className="section-tag">02 · CV Tailorer</span>
-            <h2 className="section-title">Her ilana ozel, akilli CV.</h2>
+            <h2 className="section-title">Her ilana özel, akıllı CV.</h2>
             <p className="section-desc">
-              Ilan aciklamasini yapistir, AI CV'ni analiz etsin.
+              İlan açıklamasını yapıştır, AI CV’ni analiz etsin.
             </p>
           </div>
           <CVTailorer />
@@ -55,9 +55,9 @@ export default function FeaturesPage() {
         <div className="wrap">
           <div className="section-head">
             <span className="section-tag">03 · Company Intel</span>
-            <h2 className="section-title">Sirketi basvurmadan once tani.</h2>
+            <h2 className="section-title">Şirketi başvurmadan önce tanı.</h2>
             <p className="section-desc">
-              Kultur, tech stack, mulakat tarzi ve guncel haberler.
+              Kültür, tech stack, mülakat tarzı ve güncel haberler.
             </p>
           </div>
           <CompanyCards />
@@ -70,9 +70,9 @@ export default function FeaturesPage() {
         <div className="wrap">
           <div className="section-head text-center">
             <span className="section-tag">04 · Mock Interview</span>
-            <h2 className="section-title">Mulakata guvenle hazirlan.</h2>
+            <h2 className="section-title">Mülakata güvenle hazırlan.</h2>
             <p className="section-desc">
-              Pozisyona ozel sorularla pratik yap, aninda geri bildirim al.
+              Pozisyona özel sorularla pratik yap, anında geri bildirim al.
             </p>
           </div>
           <MockInterview />
@@ -84,10 +84,10 @@ export default function FeaturesPage() {
       <section className="section" id="workflow-section">
         <div className="wrap">
           <div className="section-head">
-            <span className="section-tag">05 · Basvuru Asistani</span>
-            <h2 className="section-title">AI ile basvuru hazirligi.</h2>
+            <span className="section-tag">05 · Başvuru Asistanı</span>
+            <h2 className="section-title">AI ile başvuru hazırlığı.</h2>
             <p className="section-desc">
-              LangGraph ile 7 adimli workflow: ilan analizi → CV degerlendirme → skor kontrolu → sirket arastirma → mulakat hazirlik → aksiyon plani.
+              LangGraph ile 7 adımlı workflow: ilan analizi → CV değerlendirme → skor kontrolü → şirket araştırması → mülakat hazırlığı → aksiyon planı.
             </p>
           </div>
           <ApplicationWorkflow />
