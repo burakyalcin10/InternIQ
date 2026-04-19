@@ -1,24 +1,27 @@
-"""CV Router — CV Tailorer with PDF Upload + Gemini AI Analysis"""
+"""CV router for PDF upload and CV analysis."""
 
-import os
-import json
-from fastapi import APIRouter, UploadFile, File, Form
-from pydantic import BaseModel
-from PyPDF2 import PdfReader
 import io
+import json
+import os
+
+from fastapi import APIRouter, File, Form, Header, UploadFile
+from PyPDF2 import PdfReader
+
+from services.profile_store import clean_extracted_cv_text, get_profile
+from services.supabase_auth import get_authenticated_user
 
 router = APIRouter()
 
 
 def extract_text_from_pdf(file_bytes: bytes) -> str:
-    """Extract text content from a PDF file."""
+    """Extract text content from a PDF file and clean common encoding noise."""
     reader = PdfReader(io.BytesIO(file_bytes))
     text = ""
     for page in reader.pages:
         page_text = page.extract_text()
         if page_text:
             text += page_text + "\n"
-    return text.strip()
+    return clean_extracted_cv_text(text)
 
 
 def analyze_with_gemini(cv_text: str, job_description: str) -> dict:
@@ -30,6 +33,7 @@ def analyze_with_gemini(cv_text: str, job_description: str) -> dict:
 
     try:
         import google.generativeai as genai
+
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel("gemini-2.5-flash")
 
@@ -44,8 +48,8 @@ CV İÇERİĞİ:
 Lütfen aşağıdaki JSON formatında yanıt ver (sadece JSON, başka bir şey yazma):
 {{
     "score": <0-100 arası ATS uyumluluk skoru>,
-    "matched_keywords": ["eşleşen anahtar kelime 1", "eşleşen anahtar kelime 2", ...],
-    "missing_keywords": ["eksik anahtar kelime 1", "eksik anahtar kelime 2", ...],
+    "matched_keywords": ["eşleşen anahtar kelime 1", "eşleşen anahtar kelime 2"],
+    "missing_keywords": ["eksik anahtar kelime 1", "eksik anahtar kelime 2"],
     "suggestions": [
         {{"icon": "✅", "text": "<olumlu yorum>", "type": "success"}},
         {{"icon": "⚠️", "text": "<uyarı/eksik>", "type": "warning"}},
@@ -59,7 +63,6 @@ En az 5 suggestion ver. Türkçe yaz."""
         response = model.generate_content(prompt)
         response_text = response.text.strip()
 
-        # Clean markdown code blocks if present
         if response_text.startswith("```"):
             response_text = response_text.split("\n", 1)[1]
         if response_text.endswith("```"):
@@ -70,66 +73,92 @@ En az 5 suggestion ver. Türkçe yaz."""
         result["status"] = "ai"
         return result
 
-    except Exception as e:
-        print(f"[Gemini] Error: {e}")
+    except Exception as exc:
+        print(f"[Gemini] Error: {exc}")
         return get_fallback_analysis(cv_text, job_description)
 
 
 def get_fallback_analysis(cv_text: str, job_description: str) -> dict:
     """Fallback analysis when no API key is available."""
-    # Simple keyword matching
     jd_lower = job_description.lower()
     cv_lower = cv_text.lower() if cv_text else ""
 
     common_skills = [
-        "python", "java", "javascript", "react", "node.js", "sql", "docker",
-        "kubernetes", "git", "c++", "c#", "html", "css", "typescript",
-        "aws", "azure", "linux", "mongodb", "postgresql", "rest api",
-        "machine learning", "deep learning", "tensorflow", "pytorch",
-        "agile", "scrum", "ci/cd", "microservices"
+        "python",
+        "java",
+        "javascript",
+        "react",
+        "node.js",
+        "sql",
+        "docker",
+        "kubernetes",
+        "git",
+        "c++",
+        "c#",
+        "html",
+        "css",
+        "typescript",
+        "aws",
+        "azure",
+        "linux",
+        "mongodb",
+        "postgresql",
+        "rest api",
+        "machine learning",
+        "deep learning",
+        "tensorflow",
+        "pytorch",
+        "agile",
+        "scrum",
+        "ci/cd",
+        "microservices",
     ]
 
-    matched = [s for s in common_skills if s in jd_lower and s in cv_lower]
-    missing = [s for s in common_skills if s in jd_lower and s not in cv_lower]
+    matched = [skill for skill in common_skills if skill in jd_lower and skill in cv_lower]
+    missing = [skill for skill in common_skills if skill in jd_lower and skill not in cv_lower]
 
     total_relevant = len(matched) + len(missing)
     score = int((len(matched) / max(total_relevant, 1)) * 100) if total_relevant > 0 else 65
-
-    # Ensure score is reasonable
     score = max(40, min(95, score))
 
     suggestions = []
     if matched:
-        suggestions.append({
-            "icon": "✅",
-            "text": f"Eşleşen teknik beceriler: {', '.join(matched[:5])}",
-            "type": "success"
-        })
+        suggestions.append(
+            {
+                "icon": "✅",
+                "text": f"Eşleşen teknik beceriler: {', '.join(matched[:5])}",
+                "type": "success",
+            }
+        )
 
     if missing:
-        suggestions.append({
-            "icon": "⚠️",
-            "text": f"İlanda aranan ama CV'de eksik: {', '.join(missing[:4])}",
-            "type": "warning"
-        })
+        suggestions.append(
+            {
+                "icon": "⚠️",
+                "text": f"İlanda aranan ama CV'de eksik: {', '.join(missing[:4])}",
+                "type": "warning",
+            }
+        )
 
-    suggestions.extend([
-        {
-            "icon": "💡",
-            "text": "Proje açıklamalarında somut metrikler belirtin (ör: '%30 performans artışı')",
-            "type": "info"
-        },
-        {
-            "icon": "📝",
-            "text": "Summary bölümünü her iş ilanına özel yeniden yazın",
-            "type": "info"
-        },
-        {
-            "icon": "🎯",
-            "text": "ATS uyumluluğu için standart bölüm başlıkları kullanın (Education, Experience, Skills)",
-            "type": "info"
-        },
-    ])
+    suggestions.extend(
+        [
+            {
+                "icon": "💡",
+                "text": "Proje açıklamalarında somut metrikler belirtin (ör: '%30 performans artışı').",
+                "type": "info",
+            },
+            {
+                "icon": "📝",
+                "text": "Özet bölümünü her iş ilanına özel yeniden yazın.",
+                "type": "info",
+            },
+            {
+                "icon": "🎯",
+                "text": "ATS uyumluluğu için standart bölüm başlıkları kullanın (Education, Experience, Skills).",
+                "type": "info",
+            },
+        ]
+    )
 
     return {
         "score": score,
@@ -137,33 +166,42 @@ def get_fallback_analysis(cv_text: str, job_description: str) -> dict:
         "missing_keywords": missing,
         "suggestions": suggestions,
         "summary": f"CV'niz ilana %{score} oranında uyumludur. {len(matched)} anahtar beceri eşleşti, {len(missing)} beceri eksik.",
-        "status": "fallback"
+        "status": "fallback",
     }
 
 
 @router.post("/cv/analyze")
 async def analyze_cv(
     job_description: str = Form(...),
-    cv_file: UploadFile = File(None),
-    cv_text: str = Form(""),
+    cv_file: UploadFile | None = File(default=None),
+    cv_text: str = Form(default=""),
+    authorization: str | None = Header(default=None),
 ):
     """
     CV analizi — PDF upload veya metin olarak CV kabul eder.
-    Gemini API varsa AI analizi, yoksa keyword-based fallback.
+    Kullanıcı giriş yaptıysa ve yeni CV göndermediyse kayıtlı CV'yi kullanır.
     """
-    # Extract CV text from PDF or use provided text
     extracted_cv_text = cv_text
+    cv_source = "manual"
 
     if cv_file and cv_file.filename:
         file_bytes = await cv_file.read()
         if cv_file.filename.lower().endswith(".pdf"):
             extracted_cv_text = extract_text_from_pdf(file_bytes)
         else:
-            extracted_cv_text = file_bytes.decode("utf-8", errors="ignore")
+            extracted_cv_text = clean_extracted_cv_text(file_bytes.decode("utf-8", errors="ignore"))
+    elif not extracted_cv_text.strip():
+        user = get_authenticated_user(authorization)
+        profile = get_profile(str(user.id)) if user else None
+        saved_cv = profile.get("cv_text", "") if profile else ""
+        if saved_cv.strip():
+            extracted_cv_text = saved_cv
+            cv_source = "profile"
 
     if not extracted_cv_text.strip():
         extracted_cv_text = "(CV metni sağlanmadı)"
+        cv_source = "empty"
 
-    result = analyze_with_gemini(extracted_cv_text, job_description)
-
+    result = analyze_with_gemini(clean_extracted_cv_text(extracted_cv_text), job_description)
+    result["cv_source"] = cv_source
     return result
