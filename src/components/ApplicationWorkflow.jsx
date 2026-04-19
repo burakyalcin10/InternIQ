@@ -1,23 +1,33 @@
 import { useEffect, useState } from 'react'
 import {
-  Sparkles, Loader2, FileText, CheckCircle2,
-  Building2, MessageSquare, Target, Zap, AlertCircle, Briefcase
+  AlertCircle,
+  Briefcase,
+  Building2,
+  CheckCircle2,
+  FileText,
+  Loader2,
+  MessageSquare,
+  Sparkles,
+  Target,
+  Zap,
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useAuth } from '../context/useAuth'
 import { getListings, startWorkflow } from '../services/api'
 import './ApplicationWorkflow.css'
 
 const FALLBACK_STEPS = [
-  { id: 'analyze_listing', title: 'Ilan Analizi' },
-  { id: 'evaluate_cv', title: 'CV Degerlendirme' },
-  { id: 'check_cv_score', title: 'CV Skor Kontrolu' },
-  { id: 'suggest_improvements', title: 'CV Iyilestirme Onerileri' },
-  { id: 'research_company', title: 'Sirket Arastirmasi' },
-  { id: 'generate_interview_prep', title: 'Mulakat Hazirligi' },
-  { id: 'create_action_plan', title: 'Aksiyon Plani' },
+  { id: 'analyze_listing', title: 'İlan Analizi' },
+  { id: 'evaluate_cv', title: 'CV Değerlendirme' },
+  { id: 'check_cv_score', title: 'CV Skor Kontrolü' },
+  { id: 'suggest_improvements', title: 'CV İyileştirme Önerileri' },
+  { id: 'research_company', title: 'Şirket Araştırması' },
+  { id: 'generate_interview_prep', title: 'Mülakat Hazırlığı' },
+  { id: 'create_action_plan', title: 'Aksiyon Planı' },
 ]
 
 export default function ApplicationWorkflow({ listingId, listingTitle, companyName }) {
+  const { isAuthenticated, profile } = useAuth()
   const [cvText, setCvText] = useState('')
   const [running, setRunning] = useState(false)
   const [result, setResult] = useState(null)
@@ -49,7 +59,7 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
       } catch (err) {
         console.error('Workflow listings error:', err)
         if (active) {
-          setError('Ilanlar yuklenemedi. Workflow icin bir ilan secimi gerekli.')
+          setError('İlanlar yüklenemedi. Workflow için bir ilan seçimi gerekli.')
         }
       } finally {
         if (active) {
@@ -66,13 +76,18 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
   }, [listingId])
 
   const workflowSteps = result?.workflow_steps || FALLBACK_STEPS
+  const interviewSections = result?.interview_sections || {}
+  const cvSpecificQuestions = interviewSections.cv_specific || []
+  const companySpecificQuestions = interviewSections.company_specific || []
   const selectedListing = listingId
     ? { id: listingId, position: listingTitle, company: companyName }
     : listings.find((listing) => listing.id === Number(selectedListingId))
 
+  const usingSavedCv = !cvText.trim() && isAuthenticated && profile?.has_cv
+
   const handleRun = async () => {
     if (!selectedListingId) {
-      setError('Lutfen once bir ilan secin.')
+      setError('Lütfen önce bir ilan seçin.')
       return
     }
 
@@ -85,7 +100,7 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
       setResult(data)
     } catch (err) {
       console.error('Workflow error:', err)
-      setError('Workflow calistirilamadi. Backend baglantisini kontrol edin.')
+      setError(err.message || 'Workflow çalıştırılamadı. Backend bağlantısını kontrol edin.')
     } finally {
       setRunning(false)
     }
@@ -108,16 +123,16 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
           <div className="workflow__input-header">
             <Zap size={18} style={{ color: 'var(--accent-light)' }} />
             <div>
-              <h3>AI Basvuru Hazirlik Asistani</h3>
+              <h3>AI Başvuru Hazırlık Asistanı</h3>
               <p className="workflow__input-sub">
-                LangGraph ile durum tutan, adim adim ilerleyen basvuru hazirlik akisi
+                LangGraph ile durum tutan, adım adım ilerleyen başvuru hazırlık akışı
               </p>
             </div>
           </div>
 
           <div className="workflow__selector-row">
             <label className="workflow__field">
-              <span>Secilen Ilan</span>
+              <span>Seçilen İlan</span>
               {listingId ? (
                 <div className="workflow__listing-pill">
                   <Briefcase size={14} />
@@ -127,11 +142,11 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
                 <select
                   className="input workflow__select"
                   value={selectedListingId}
-                  onChange={(e) => setSelectedListingId(e.target.value)}
+                  onChange={(event) => setSelectedListingId(event.target.value)}
                   disabled={loadingListings}
                 >
                   <option value="">
-                    {loadingListings ? 'Ilanlar yukleniyor...' : 'Bir ilan secin'}
+                    {loadingListings ? 'İlanlar yükleniyor...' : 'Bir ilan seçin'}
                   </option>
                   {listings.map((listing) => (
                     <option key={listing.id} value={listing.id}>
@@ -150,8 +165,8 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
                 <strong>{selectedListing.position}</strong>
               </div>
               <p>
-                {selectedListing.company || 'Sirket secimi bekleniyor'} icin CV analizi, sirket arastirmasi,
-                mulakat hazirligi ve aksiyon plani tek bir graph uzerinden uretilir.
+                {selectedListing.company || 'Şirket seçimi bekleniyor'} için CV analizi, şirket araştırması,
+                mülakat hazırlığı ve aksiyon planı tek bir graph üzerinden üretilir.
               </p>
             </div>
           )}
@@ -161,23 +176,29 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
             <textarea
               id="workflow-cv-text"
               className="input workflow__textarea"
-              placeholder="CV'nizin metnini buraya yapistirin. Bos birakirsaniz sistem genel uygunluk analizi yapar."
+              placeholder="CV’nizin metnini buraya yapıştırın. Boş bırakırsanız sistem kayıtlı CV’nizi veya genel uygunluk analizini kullanır."
               value={cvText}
-              onChange={(e) => setCvText(e.target.value)}
+              onChange={(event) => setCvText(event.target.value)}
               rows={4}
             />
           </div>
+
+          {usingSavedCv && (
+            <div className="workflow__saved-cv-note">
+              Kayıtlı CV profiliniz kullanılacak. İsterseniz bu alanı doldurarak anlık farklı bir CV ile test yapabilirsiniz.
+            </div>
+          )}
 
           <button
             className="btn btn-primary workflow__run-btn"
             onClick={handleRun}
             disabled={running || loadingListings || !selectedListingId}
           >
-            <Sparkles size={16} /> Hazirlik Plani Olustur
+            <Sparkles size={16} /> Hazırlık Planı Oluştur
           </button>
 
           <div className="workflow__steps-panel">
-            <div className="workflow__step-label">LangGraph Dugumleri</div>
+            <div className="workflow__step-label">LangGraph düğümleri</div>
             <div className="workflow__steps-preview">
               {workflowSteps.map((step, index) => (
                 <span key={step.id} className="workflow__step-chip">
@@ -201,8 +222,8 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
             <div className="workflow__loading-animation">
               <Loader2 size={32} className="spin" style={{ color: 'var(--accent-light)' }} />
             </div>
-            <h3>LangGraph Workflow Calisiyor...</h3>
-            <p>Secilen ilan icin graph dugumleri sirayla isleniyor</p>
+            <h3>LangGraph workflow çalışıyor...</h3>
+            <p>Seçilen ilan için graph düğümleri sırayla işleniyor.</p>
             <div className="workflow__loading-steps">
               {workflowSteps.map((step, index) => (
                 <div
@@ -226,7 +247,7 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
             <AlertCircle size={32} style={{ color: 'var(--rose)' }} />
             <p>{error}</p>
             <button className="btn btn-ghost" onClick={() => setError(null)}>
-              Tekrar Dene
+              Tekrar dene
             </button>
           </motion.div>
         )}
@@ -244,7 +265,11 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
                   <div className="workflow__result-badge">
                     <Zap size={13} /> LangGraph Analiz
                     <span className="workflow__result-mode">
-                      {result.status === 'ai' ? '· AI' : '· Demo'}
+                      {result.llm_provider === 'gemini'
+                        ? '· Gemini'
+                        : result.status === 'ai'
+                          ? '· AI'
+                          : '· Demo'}
                     </span>
                   </div>
                   <h2>{result.action_plan?.company || result.listing?.company || companyName}</h2>
@@ -260,12 +285,22 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
                   <span className="workflow__score-label">CV Skoru</span>
                 </div>
               </div>
+
+              <div className="workflow__result-meta">
+                <span className={`tag ${result.cv_source === 'profile' ? 'tag-emerald' : 'tag-accent'}`}>
+                  {result.cv_source === 'profile'
+                    ? 'Kayıtlı CV kullanıldı'
+                    : result.cv_source === 'manual'
+                      ? 'Elle girilen CV kullanıldı'
+                      : 'Genel değerlendirme'}
+                </span>
+              </div>
             </div>
 
             <div className="workflow__graph-summary glass-card">
               <div className="workflow__graph-summary-head">
                 <Sparkles size={16} />
-                <strong>Calistirilan LangGraph Adimlari</strong>
+                <strong>Çalıştırılan LangGraph adımları</strong>
               </div>
               <div className="workflow__graph-summary-steps">
                 {(result.workflow_steps || workflowSteps).map((step, index) => (
@@ -280,12 +315,20 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
             <div className="workflow__result-grid">
               <motion.div className="workflow__result-card glass-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
                 <h3><FileText size={16} /> CV Analizi</h3>
-                <p>{result.cv_analysis?.summary || 'CV analizi tamamlandi.'}</p>
+                <p>{result.cv_analysis?.summary || 'CV analizi tamamlandı.'}</p>
                 {result.cv_analysis?.matched_skills?.length > 0 && (
                   <div className="workflow__tags">
-                    <span className="workflow__tag-label">Eslesen:</span>
+                    <span className="workflow__tag-label">Eşleşen:</span>
                     {result.cv_analysis.matched_skills.map((skill, index) => (
                       <span key={index} className="tag tag--match">{skill}</span>
+                    ))}
+                  </div>
+                )}
+                {result.cv_analysis?.transferable_skills?.length > 0 && (
+                  <div className="workflow__tags">
+                    <span className="workflow__tag-label">Aktarılabilir:</span>
+                    {result.cv_analysis.transferable_skills.map((skill, index) => (
+                      <span key={index} className="tag">{skill}</span>
                     ))}
                   </div>
                 )}
@@ -301,7 +344,7 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
 
               {result.cv_suggestions?.length > 0 && (
                 <motion.div className="workflow__result-card glass-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                  <h3><Target size={16} /> CV Iyilestirme Onerileri</h3>
+                  <h3><Target size={16} /> CV İyileştirme Önerileri</h3>
                   <ul className="workflow__list">
                     {result.cv_suggestions.map((suggestion, index) => (
                       <li key={index}><CheckCircle2 size={14} /> {suggestion}</li>
@@ -311,10 +354,10 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
               )}
 
               <motion.div className="workflow__result-card glass-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-                <h3><Building2 size={16} /> Sirket Bilgisi</h3>
-                <p><strong>Sektor:</strong> {result.company_info?.industry}</p>
-                <p><strong>Kultur:</strong> {result.company_info?.culture}</p>
-                <p><strong>Mulakat Tarzi:</strong> {result.company_info?.interview_style}</p>
+                <h3><Building2 size={16} /> Şirket Bilgisi</h3>
+                <p><strong>Sektör:</strong> {result.company_info?.industry}</p>
+                <p><strong>Kültür:</strong> {result.company_info?.culture}</p>
+                <p><strong>Mülakat tarzı:</strong> {result.company_info?.interview_style}</p>
                 {result.company_info?.tech_stack?.length > 0 && (
                   <div className="workflow__tags" style={{ marginTop: 8 }}>
                     {result.company_info.tech_stack.map((tech, index) => (
@@ -325,19 +368,32 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
               </motion.div>
 
               {result.interview_questions?.length > 0 && (
-                <motion.div className="workflow__result-card glass-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                  <h3><MessageSquare size={16} /> Hazirlik Sorulari</h3>
-                  <ol className="workflow__list workflow__list--numbered">
-                    {result.interview_questions.map((question, index) => (
-                      <li key={index}>{question}</li>
-                    ))}
-                  </ol>
+                <motion.div className="workflow__result-card workflow__result-card--wide glass-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                  <h3><MessageSquare size={16} /> Hazırlık Soruları</h3>
+                  <div className="workflow__interview-grid">
+                    <div className="workflow__interview-column">
+                      <strong className="workflow__interview-title">CV’ye Özel Sorular</strong>
+                      <ol className="workflow__list workflow__list--numbered">
+                        {(cvSpecificQuestions.length > 0 ? cvSpecificQuestions : result.interview_questions.slice(0, 3)).map((question, index) => (
+                          <li key={`cv-${index}`}>{question}</li>
+                        ))}
+                      </ol>
+                    </div>
+                    <div className="workflow__interview-column">
+                      <strong className="workflow__interview-title">Şirketin Sorabileceği Genel Sorular</strong>
+                      <ol className="workflow__list workflow__list--numbered">
+                        {(companySpecificQuestions.length > 0 ? companySpecificQuestions : result.interview_questions.slice(3)).map((question, index) => (
+                          <li key={`company-${index}`}>{question}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  </div>
                 </motion.div>
               )}
 
               {result.action_plan?.steps && (
                 <motion.div className="workflow__result-card workflow__result-card--wide workflow__result-card--highlight glass-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-                  <h3><Sparkles size={16} /> Kisilestirilmis Aksiyon Plani</h3>
+                  <h3><Sparkles size={16} /> Kişiselleştirilmiş Aksiyon Planı</h3>
                   {result.action_plan.summary && (
                     <p className="workflow__plan-summary">{result.action_plan.summary}</p>
                   )}
@@ -357,7 +413,7 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
             </div>
 
             <button className="btn btn-ghost workflow__reset-btn" onClick={() => { setResult(null); setError(null) }}>
-              ← Yeni Analiz
+              ← Yeni analiz
             </button>
           </motion.div>
         )}
