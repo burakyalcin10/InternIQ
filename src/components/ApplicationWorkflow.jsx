@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import {
   AlertCircle,
   Briefcase,
@@ -27,14 +28,25 @@ const FALLBACK_STEPS = [
 ]
 
 export default function ApplicationWorkflow({ listingId, listingTitle, companyName }) {
-  const { isAuthenticated, profile } = useAuth()
+  const { isAuthenticated, profile, authLoading } = useAuth()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const queryListingId = searchParams.get('listing')
+  const shouldAutoRun = searchParams.get('autorun') === '1'
+  const autoRunTriggeredRef = useRef(false)
   const [cvText, setCvText] = useState('')
   const [running, setRunning] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
   const [listings, setListings] = useState([])
-  const [selectedListingId, setSelectedListingId] = useState(listingId || '')
+  const [selectedListingId, setSelectedListingId] = useState(listingId || queryListingId || '')
   const [loadingListings, setLoadingListings] = useState(!listingId)
+
+  useEffect(() => {
+    if (!listingId && queryListingId) {
+      setSelectedListingId(queryListingId)
+    }
+  }, [listingId, queryListingId])
 
   useEffect(() => {
     if (listingId) {
@@ -73,7 +85,7 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
     return () => {
       active = false
     }
-  }, [listingId])
+  }, [listingId, queryListingId])
 
   const workflowSteps = result?.workflow_steps || FALLBACK_STEPS
   const interviewSections = result?.interview_sections || {}
@@ -105,6 +117,47 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
       setRunning(false)
     }
   }
+
+  useEffect(() => {
+    if (!shouldAutoRun || autoRunTriggeredRef.current) {
+      return
+    }
+
+    if (authLoading || loadingListings || running || !selectedListingId) {
+      return
+    }
+
+    if (!isAuthenticated || !profile?.has_cv) {
+      autoRunTriggeredRef.current = true
+      setError('Otomatik başlatma için önce giriş yapıp güncel CV profilinizi yüklemelisiniz.')
+      return
+    }
+
+    autoRunTriggeredRef.current = true
+    handleRun()
+  }, [
+    shouldAutoRun,
+    authLoading,
+    loadingListings,
+    running,
+    selectedListingId,
+    isAuthenticated,
+    profile?.has_cv,
+  ])
+
+  useLayoutEffect(() => {
+    if (!shouldAutoRun) {
+      return
+    }
+
+    const scrollToWorkflow = () => {
+      const section = document.getElementById('workflow-section')
+      section?.scrollIntoView({ behavior: 'auto', block: 'start' })
+    }
+
+    const frameId = window.requestAnimationFrame(scrollToWorkflow)
+    return () => window.cancelAnimationFrame(frameId)
+  }, [shouldAutoRun, location.key])
 
   const getScoreColor = (score) => {
     if (score >= 80) return 'var(--emerald)'
