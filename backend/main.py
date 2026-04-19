@@ -1,13 +1,14 @@
-"""InternIQ Backend — FastAPI Application"""
+"""InternIQ Backend — FastAPI Application."""
 
 import os
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
-
-from routers import listings, companies, cv, interview, crew, workflow
 
 load_dotenv()
+
+from routers import auth, companies, crew, cv, interview, listings, workflow
 
 app = FastAPI(
     title="InternIQ API",
@@ -15,7 +16,6 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS
 origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
 app.add_middleware(
     CORSMiddleware,
@@ -25,7 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
+app.include_router(auth.router, prefix="/api/v1", tags=["Auth"])
 app.include_router(listings.router, prefix="/api/v1", tags=["Listings"])
 app.include_router(companies.router, prefix="/api/v1", tags=["Companies"])
 app.include_router(cv.router, prefix="/api/v1", tags=["CV"])
