@@ -240,6 +240,14 @@ export default function ListingDetail() {
                   <Sparkles size={16} />
                   AI Şirket Analizi
                 </Link>
+
+                <Link
+                  to={`/features?listing=${listing.id}&autorun=1`}
+                  className="btn btn-ghost detail__workflow-btn"
+                >
+                  <Sparkles size={16} />
+                  Başvuru Hazırlığı Yap
+                </Link>
               </div>
             </div>
           </motion.div>
