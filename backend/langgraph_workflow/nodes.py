@@ -28,19 +28,40 @@ def normalize_company_name(value: str) -> str:
 
 
 def get_llm():
-    """Return a Gemini model instance, or None if no API key."""
+    """Return Gemini client config, or None if no API key."""
     api_key = os.getenv("GEMINI_API_KEY", "")
     if not api_key or api_key == "your_gemini_key_here":
         return None
     import google.generativeai as genai
 
     genai.configure(api_key=api_key)
-    return genai.GenerativeModel("gemini-2.5-flash")
+    preferred_model = os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash")
+    fallback_models = [
+        "models/gemini-flash-lite-latest",
+        "models/gemini-2.0-flash-lite",
+        "models/gemini-2.0-flash",
+    ]
+    ordered_models = [preferred_model] + [name for name in fallback_models if name != preferred_model]
+    return {"genai": genai, "models": ordered_models}
 
 
 def _invoke_model_text(model, prompt: str) -> str:
-    response = model.generate_content(prompt)
-    return getattr(response, "text", "").strip()
+    last_error = None
+
+    for model_name in model["models"]:
+        try:
+            response = model["genai"].GenerativeModel(model_name).generate_content(prompt)
+            text = getattr(response, "text", "").strip()
+            if text:
+                return text
+        except Exception as exc:
+            last_error = exc
+            continue
+
+    if last_error:
+        raise last_error
+
+    return ""
 
 
 def _extract_json_payload(text: str):
@@ -230,14 +251,22 @@ def suggest_improvements(state: dict) -> dict:
         "Her oneriyi yeni satirda, madde isaretiyle yaz."
     )
 
-    response_text = _invoke_model_text(llm, prompt)
-    suggestions = [
-        line.strip().lstrip("•-123456789. ")
-        for line in response_text.split("\n")
-        if line.strip() and len(line.strip()) > 5
-    ]
-
-    return {"cv_suggestions": suggestions[:6], "llm_provider": "gemini"}
+    try:
+        response_text = _invoke_model_text(llm, prompt)
+        suggestions = [
+            line.strip().lstrip("•-123456789. ")
+            for line in response_text.split("\n")
+            if line.strip() and len(line.strip()) > 5
+        ]
+        return {"cv_suggestions": suggestions[:6], "llm_provider": "gemini"}
+    except Exception:
+        fallback_suggestions = [
+            f"{company} için özet kısmınızı ve proje deneyimlerinizi ilana göre yeniden konumlandırın.",
+            "Proje açıklamalarında ölçülebilir sonuçlar ve teknik sahiplik vurgusu ekleyin.",
+            f"Şu başlıklarda görünürlüğü artırın: {', '.join(missing[:3])}" if missing else "İlanda öne çıkan teknik başlıkları CV içinde daha görünür hale getirin.",
+            "Başvurduğunuz rol için kullandığınız benzer teknolojileri birebir isimleriyle yazın.",
+        ]
+        return {"cv_suggestions": fallback_suggestions, "llm_provider": "fallback"}
 
 
 # ════════════════════════════════════════════════════════════
