@@ -1,9 +1,10 @@
-"""Listings Router — Staj Radar"""
+"""Listings Router - Staj Radar."""
 
 import json
 from pathlib import Path
 from typing import Optional
-from fastapi import APIRouter, Query
+
+from fastapi import APIRouter, HTTPException, Query
 
 router = APIRouter()
 
@@ -18,27 +19,25 @@ def load_listings():
 @router.get("/listings")
 async def get_listings(
     search: Optional[str] = Query(None, description="Arama terimi"),
-    type: Optional[str] = Query(None, description="İlan tipi: Remote, On-site, Hybrid"),
-    limit: Optional[int] = Query(None, description="Maksimum sonuç sayısı"),
+    type: Optional[str] = Query(None, description="Ilan tipi: Remote, On-site, Hybrid"),
+    limit: Optional[int] = Query(None, description="Maksimum sonuc sayisi"),
 ):
-    """Staj ilanlarını listele, opsiyonel filtreleme ile."""
+    """Staj ilanlarini listele, opsiyonel filtreleme ile."""
     listings = load_listings()
 
-    # Search filter
     if search:
         q = search.lower()
         listings = [
-            l for l in listings
+            l
+            for l in listings
             if q in l["position"].lower()
             or q in l["company"].lower()
             or any(q in tag.lower() for tag in l["tags"])
         ]
 
-    # Type filter
     if type and type != "all":
         listings = [l for l in listings if l["type"] == type]
 
-    # Limit
     if limit:
         listings = listings[:limit]
 
@@ -47,9 +46,9 @@ async def get_listings(
 
 @router.get("/listings/{listing_id}")
 async def get_listing(listing_id: int):
-    """Tek bir staj ilanı getir."""
+    """Tek bir staj ilani getir."""
     listings = load_listings()
     listing = next((l for l in listings if l["id"] == listing_id), None)
     if not listing:
-        return {"error": "Listing not found"}, 404
+        raise HTTPException(status_code=404, detail="Listing not found")
     return listing

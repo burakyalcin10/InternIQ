@@ -15,6 +15,63 @@
   color: var(--text-tertiary);
 }
 
+.workflow__selector-row {
+  margin-bottom: var(--space-md);
+}
+
+.workflow__field {
+  display: block;
+}
+
+.workflow__field span {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.workflow__select {
+  width: 100%;
+}
+
+.workflow__listing-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.workflow__listing-summary {
+  margin-bottom: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.workflow__listing-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 0.84rem;
+  color: var(--text-primary);
+}
+
+.workflow__listing-summary p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--text-tertiary);
+}
+
 .workflow__cv-input label {
   display: block;
   font-size: 0.82rem;
@@ -34,11 +91,16 @@
   margin-top: var(--space-md);
 }
 
+.workflow__steps-panel {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 .workflow__steps-preview {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: var(--space-md);
   align-items: center;
 }
 
@@ -108,6 +170,51 @@
 .workflow__result-header {
   margin-bottom: var(--space-lg);
   padding: var(--space-lg);
+}
+
+.workflow__graph-summary {
+  margin-bottom: var(--space-lg);
+  padding: var(--space-lg);
+}
+
+.workflow__graph-summary-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--space-md);
+  font-size: 0.88rem;
+}
+
+.workflow__graph-summary-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.workflow__graph-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-full);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.workflow__graph-step-num {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-muted);
+  color: var(--accent-light);
+  border: 1px solid var(--border-accent);
+  font-size: 0.7rem;
+  font-weight: 700;
 }
 
 .workflow__result-title-row {

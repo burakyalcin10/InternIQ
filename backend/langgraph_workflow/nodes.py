@@ -19,6 +19,14 @@ LISTINGS_PATH = Path(__file__).parent.parent / "data" / "listings.json"
 COMPANIES_PATH = Path(__file__).parent.parent / "data" / "companies.json"
 
 
+def normalize_company_name(value: str) -> str:
+    """Normalize company names for fuzzy equality across local datasets."""
+    cleaned = (value or "").strip().lower()
+    if "(" in cleaned:
+        cleaned = cleaned.split("(", 1)[0].strip()
+    return " ".join(cleaned.replace("-", " ").split())
+
+
 def get_llm():
     """Return a ChatOpenAI instance, or None if no API key."""
     api_key = os.getenv("OPENAI_API_KEY", "")
@@ -171,11 +179,19 @@ def suggest_improvements(state: dict) -> dict:
 def research_company(state: dict) -> dict:
     """Load company info from existing data."""
     company_name = state.get("company_name", "")
+    normalized_name = normalize_company_name(company_name)
 
     with open(COMPANIES_PATH, "r", encoding="utf-8") as f:
         companies = json.load(f)
 
-    company = next((c for c in companies if c["name"].lower() == company_name.lower()), None)
+    company = next(
+        (
+            c
+            for c in companies
+            if normalize_company_name(c["name"]) == normalized_name
+        ),
+        None,
+    )
 
     if company:
         return {

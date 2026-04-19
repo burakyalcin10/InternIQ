@@ -1,8 +1,9 @@
-"""Companies Router — Company Intel"""
+"""Companies Router - Company Intel."""
 
 import json
 from pathlib import Path
-from fastapi import APIRouter
+
+from fastapi import APIRouter, HTTPException
 
 router = APIRouter()
 
@@ -16,16 +17,16 @@ def load_companies():
 
 @router.get("/companies")
 async def get_companies():
-    """Tüm şirket profillerini listele."""
+    """Tum sirket profillerini listele."""
     companies = load_companies()
     return {"companies": companies, "total": len(companies)}
 
 
 @router.get("/companies/{company_id}")
 async def get_company(company_id: int):
-    """Tek bir şirket profili getir."""
+    """Tek bir sirket profili getir."""
     companies = load_companies()
     company = next((c for c in companies if c["id"] == company_id), None)
     if not company:
-        return {"error": "Company not found"}, 404
+        raise HTTPException(status_code=404, detail="Company not found")
     return company

@@ -14,20 +14,16 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  useEffect(() => {
-    setIsOpen(false)
-  }, [location])
-
   const navLinks = [
     { to: '/', label: 'Ana Sayfa' },
-    { to: '/features', label: 'Özellikler' },
-    { to: '/about', label: 'Hakkında' },
+    { to: '/features', label: 'Ozellikler' },
+    { to: '/about', label: 'Hakkinda' },
   ]
 
   return (
     <nav className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
       <div className="navbar__inner">
-        <Link to="/" className="navbar__brand">
+        <Link to="/" className="navbar__brand" onClick={() => setIsOpen(false)}>
           <div className="navbar__logo">
             <Sparkles size={18} />
           </div>
@@ -40,12 +36,13 @@ export default function Navbar() {
               key={link.to}
               to={link.to}
               className={`navbar__link ${location.pathname === link.to ? 'navbar__link--active' : ''}`}
+              onClick={() => setIsOpen(false)}
             >
               {link.label}
             </Link>
           ))}
-          <Link to="/features" className="navbar__cta">
-            Başla
+          <Link to="/features" className="navbar__cta" onClick={() => setIsOpen(false)}>
+            Basla
           </Link>
         </div>
 
