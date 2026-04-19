@@ -1,6 +1,17 @@
-import { useState, useRef } from 'react'
-import { Send, Loader2, FileCheck, AlertCircle, Lightbulb, Target, FileText, Upload, X, Sparkles } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useRef, useState } from 'react'
+import {
+  AlertCircle,
+  FileCheck,
+  FileText,
+  Lightbulb,
+  Loader2,
+  Sparkles,
+  Target,
+  Upload,
+  X,
+} from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useAuth } from '../context/useAuth'
 import { analyzeCv } from '../services/api'
 import './CVTailorer.css'
 
@@ -13,6 +24,7 @@ const iconMap = {
 }
 
 export default function CVTailorer() {
+  const { profile } = useAuth()
   const [jobDesc, setJobDesc] = useState('')
   const [cvFile, setCvFile] = useState(null)
   const [analyzing, setAnalyzing] = useState(false)
@@ -20,8 +32,8 @@ export default function CVTailorer() {
   const [error, setError] = useState(null)
   const fileInputRef = useRef(null)
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0]
+  const handleFileChange = (event) => {
+    const file = event.target.files[0]
     if (file && file.type === 'application/pdf') {
       setCvFile(file)
     } else if (file) {
@@ -42,12 +54,12 @@ export default function CVTailorer() {
 
     try {
       const data = await analyzeCv(jobDesc, cvFile)
-      // Map API response to component format
-      const suggestions = (data.suggestions || []).map((s) => ({
-        icon: iconMap[s.icon] || Lightbulb,
-        text: s.text,
-        type: s.type,
+      const suggestions = (data.suggestions || []).map((suggestion) => ({
+        icon: iconMap[suggestion.icon] || Lightbulb,
+        text: suggestion.text,
+        type: suggestion.type,
       }))
+
       setResult({
         score: data.score,
         suggestions,
@@ -55,10 +67,11 @@ export default function CVTailorer() {
         missing_keywords: data.missing_keywords || [],
         summary: data.summary || '',
         status: data.status || 'fallback',
+        cv_source: data.cv_source || 'manual',
       })
     } catch (err) {
       console.error('CV analysis error:', err)
-      setError('CV analizi sırasında bir hata oluştu. Backend çalışıyor mu kontrol edin.')
+      setError(err.message || 'CV analizi sırasında bir hata oluştu. Backend çalışıyor mu kontrol edin.')
     } finally {
       setAnalyzing(false)
     }
@@ -78,10 +91,9 @@ export default function CVTailorer() {
           className="input cv-panel__textarea"
           placeholder={"Staj ilanının açıklamasını buraya yapıştırın...\n\nÖrnek: 'ASELSAN Yazılım Mühendisliği Stajyeri — C/C++ ve gömülü sistem bilgisi aranan, 3-4. sınıf öğrencileri...'"}
           value={jobDesc}
-          onChange={(e) => setJobDesc(e.target.value)}
+          onChange={(event) => setJobDesc(event.target.value)}
         />
 
-        {/* PDF Upload Area */}
         <div className="cv-upload">
           <div className="cv-upload__label">CV Yükle (PDF)</div>
           {!cvFile ? (
@@ -114,6 +126,12 @@ export default function CVTailorer() {
           )}
         </div>
 
+        {profile?.has_cv && !cvFile && (
+          <div className="cv-upload__profile-note">
+            PDF yüklemezseniz kayıtlı CV profiliniz kullanılacaktır.
+          </div>
+        )}
+
         <button
           className="btn btn-primary cv-panel__btn"
           onClick={handleAnalyze}
@@ -125,7 +143,7 @@ export default function CVTailorer() {
             </>
           ) : (
             <>
-              <Sparkles size={16} /> CV'yi Analiz Et
+              <Sparkles size={16} /> CV’yi analiz et
             </>
           )}
         </button>
@@ -158,7 +176,7 @@ export default function CVTailorer() {
               <AlertCircle size={40} style={{ color: 'var(--rose)' }} />
               <p style={{ color: 'var(--rose)' }}>{error}</p>
               <button className="btn btn-ghost" onClick={handleAnalyze} style={{ marginTop: '8px' }}>
-                Tekrar Dene
+                Tekrar dene
               </button>
             </motion.div>
           )}
@@ -183,7 +201,7 @@ export default function CVTailorer() {
                 <div>
                   <div className="cv-score-label">ATS Uyumluluk Skoru</div>
                   <div className="cv-score-sub">
-                    CV'niz bu ilan ile %{result.score} eşleşiyor
+                    CV’niz bu ilan ile %{result.score} eşleşiyor
                     {result.status === 'ai' && (
                       <span className="cv-badge cv-badge--ai">Gemini AI</span>
                     )}
@@ -191,25 +209,30 @@ export default function CVTailorer() {
                       <span className="cv-badge cv-badge--fallback">Demo</span>
                     )}
                   </div>
+                  <div className="cv-score-sub">
+                    {result.cv_source === 'profile'
+                      ? 'Kayıtlı CV profiliniz kullanıldı.'
+                      : result.cv_source === 'empty'
+                        ? 'CV olmadan genel uygunluk analizi yapıldı.'
+                        : 'Gönderdiğiniz CV kullanıldı.'}
+                  </div>
                 </div>
               </div>
 
-              {/* Summary */}
               {result.summary && (
                 <div className="cv-summary">
                   <p>{result.summary}</p>
                 </div>
               )}
 
-              {/* Keywords */}
               {(result.matched_keywords.length > 0 || result.missing_keywords.length > 0) && (
                 <div className="cv-keywords">
                   {result.matched_keywords.length > 0 && (
                     <div className="cv-keywords__group">
                       <div className="cv-keywords__label cv-keywords__label--match">Eşleşen</div>
                       <div className="cv-keywords__tags">
-                        {result.matched_keywords.map((k, i) => (
-                          <span key={i} className="tag tag--match">{k}</span>
+                        {result.matched_keywords.map((keyword, index) => (
+                          <span key={index} className="tag tag--match">{keyword}</span>
                         ))}
                       </div>
                     </div>
@@ -218,8 +241,8 @@ export default function CVTailorer() {
                     <div className="cv-keywords__group">
                       <div className="cv-keywords__label cv-keywords__label--miss">Eksik</div>
                       <div className="cv-keywords__tags">
-                        {result.missing_keywords.map((k, i) => (
-                          <span key={i} className="tag tag--miss">{k}</span>
+                        {result.missing_keywords.map((keyword, index) => (
+                          <span key={index} className="tag tag--miss">{keyword}</span>
                         ))}
                       </div>
                     </div>
@@ -229,18 +252,18 @@ export default function CVTailorer() {
 
               <div className="cv-suggestions-title">Öneriler</div>
               <div className="cv-suggestions">
-                {result.suggestions.map((s, i) => {
-                  const Icon = s.icon
+                {result.suggestions.map((suggestion, index) => {
+                  const Icon = suggestion.icon
                   return (
                     <motion.div
-                      key={i}
-                      className={`cv-suggestion cv-suggestion--${s.type}`}
+                      key={index}
+                      className={`cv-suggestion cv-suggestion--${suggestion.type}`}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.1 }}
+                      transition={{ delay: index * 0.1 }}
                     >
                       <Icon size={16} className="cv-suggestion__icon" />
-                      <span>{s.text}</span>
+                      <span>{suggestion.text}</span>
                     </motion.div>
                   )
                 })}
@@ -256,9 +279,9 @@ export default function CVTailorer() {
               animate={{ opacity: 1 }}
             >
               <Upload size={40} style={{ color: 'var(--text-muted)' }} />
-              <p>CV'nizi PDF olarak yükleyin ve ilan açıklamasını yapıştırın.</p>
+              <p>CV’nizi PDF olarak yükleyin ve ilan açıklamasını yapıştırın.</p>
               <p className="cv-empty__sub">
-                AI, CV'nizi ilanla karşılaştırarak ATS skoru, eşleşen/eksik beceriler ve öneriler sunacak.
+                AI, CV’nizi ilanla karşılaştırarak ATS skoru, eşleşen veya eksik beceriler ve öneriler sunacak.
               </p>
             </motion.div>
           )}
