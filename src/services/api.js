@@ -1,25 +1,58 @@
+import { supabase } from '../lib/supabase'
+
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+
+async function getAuthHeaders(options = {}) {
+  const { data } = await supabase.auth.getSession()
+  const token = data.session?.access_token
+  const isFormData = options.body instanceof FormData
+
+  return {
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers,
+  }
+}
 
 async function fetchAPI(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+  const response = await fetch(url, {
     ...options,
+    headers: await getAuthHeaders(options),
+  })
+
+  const contentType = response.headers.get('content-type') || ''
+  const payload = contentType.includes('application/json')
+    ? await response.json()
+    : await response.text()
+
+  if (!response.ok) {
+    const message =
+      payload?.detail ||
+      payload?.message ||
+      `API Error: ${response.status}`
+    throw new Error(message)
   }
 
-  try {
-    const response = await fetch(url, config)
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`)
-    }
-    return await response.json()
-  } catch (error) {
-    console.error(`API request failed: ${endpoint}`, error)
-    throw error
+  return payload
+}
+
+export const getCurrentUser = () => fetchAPI('/auth/me')
+export const getProfile = () => fetchAPI('/profile/me')
+
+export const uploadProfileCv = async (cvFile = null, cvText = '') => {
+  const formData = new FormData()
+  if (cvFile) {
+    formData.append('cv_file', cvFile)
   }
+  if (cvText.trim()) {
+    formData.append('cv_text', cvText)
+  }
+
+  return fetchAPI('/profile/cv', {
+    method: 'POST',
+    body: formData,
+  })
 }
 
 // Listings
@@ -33,30 +66,21 @@ export const getListing = (id) => fetchAPI(`/listings/${id}`)
 export const getCompanies = () => fetchAPI('/companies')
 export const getCompany = (id) => fetchAPI(`/companies/${id}`)
 
-// CV Analysis (supports PDF upload via FormData)
+// CV Analysis
 export const analyzeCv = async (jobDescription, cvFile = null, cvText = '') => {
-  const url = `${API_BASE}/cv/analyze`
   const formData = new FormData()
   formData.append('job_description', jobDescription)
   if (cvFile) {
     formData.append('cv_file', cvFile)
   }
-  if (cvText) {
+  if (cvText.trim()) {
     formData.append('cv_text', cvText)
   }
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      body: formData,
-      // No Content-Type header — browser sets multipart boundary automatically
-    })
-    if (!response.ok) throw new Error(`API Error: ${response.status}`)
-    return await response.json()
-  } catch (error) {
-    console.error('CV analysis failed:', error)
-    throw error
-  }
+  return fetchAPI('/cv/analyze', {
+    method: 'POST',
+    body: formData,
+  })
 }
 
 // Interview — Basic Mode
@@ -73,7 +97,12 @@ export const evaluateAnswer = (question, answer) =>
   })
 
 // Interview — LangGraph Mode
-export const lgStartInterview = (company = 'Genel', position = 'Yazılım Mühendisi Stajyeri', category = 'technical', maxQuestions = 5) =>
+export const lgStartInterview = (
+  company = 'Genel',
+  position = 'Yazılım Mühendisi Stajyeri',
+  category = 'technical',
+  maxQuestions = 5,
+) =>
   fetchAPI('/interview/lg/start', {
     method: 'POST',
     body: JSON.stringify({
