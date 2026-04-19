@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Sparkles } from 'lucide-react'
+import { Menu, Sparkles, UserRound, X } from 'lucide-react'
+import { useAuth } from '../context/useAuth'
 import './Navbar.css'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
+  const { isAuthenticated } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 30)
@@ -16,8 +18,9 @@ export default function Navbar() {
 
   const navLinks = [
     { to: '/', label: 'Ana Sayfa' },
-    { to: '/features', label: 'Ozellikler' },
-    { to: '/about', label: 'Hakkinda' },
+    { to: '/features', label: 'Özellikler' },
+    { to: '/about', label: 'Hakkında' },
+    ...(isAuthenticated ? [{ to: '/hesabim', label: 'Hesabım' }] : []),
   ]
 
   return (
@@ -41,15 +44,20 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link to="/features" className="navbar__cta" onClick={() => setIsOpen(false)}>
-            Basla
+          <Link
+            to={isAuthenticated ? '/hesabim' : '/giris'}
+            className="navbar__cta"
+            onClick={() => setIsOpen(false)}
+          >
+            <UserRound size={15} />
+            {isAuthenticated ? 'Hesabım' : 'Giriş Yap'}
           </Link>
         </div>
 
         <button
           className="navbar__toggle"
           onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle menu"
+          aria-label="Menüyü aç veya kapat"
         >
           {isOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
