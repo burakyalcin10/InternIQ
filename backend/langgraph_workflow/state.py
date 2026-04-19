@@ -15,6 +15,7 @@ class WorkflowState(TypedDict):
     # ── Input ──
     listing_id: int
     cv_text: str
+    candidate_profile: dict
 
     # ── Listing Analysis ──
     listing_data: dict
@@ -33,7 +34,9 @@ class WorkflowState(TypedDict):
 
     # ── Interview Prep ──
     interview_questions: list
+    interview_sections: dict
 
     # ── Final Output ──
     action_plan: dict
     status: str  # "ai" | "fallback"
+    llm_provider: str
