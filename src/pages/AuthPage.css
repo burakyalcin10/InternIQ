@@ -1,0 +1,127 @@
+.auth-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.auth-card {
+  padding: var(--space-xl);
+}
+
+.auth-card__header {
+  margin-bottom: var(--space-lg);
+}
+
+.auth-card__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-light);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.auth-card__title {
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+}
+
+.auth-card__desc {
+  color: var(--text-tertiary);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.auth-field {
+  display: block;
+  margin-bottom: var(--space-md);
+}
+
+.auth-field span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.auth-btn {
+  width: 100%;
+  margin-top: var(--space-sm);
+}
+
+.auth-feedback {
+  margin-top: var(--space-md);
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+}
+
+.auth-feedback--error {
+  border: 1px solid rgba(244, 63, 94, 0.28);
+  background: rgba(244, 63, 94, 0.08);
+  color: var(--rose);
+}
+
+.auth-feedback--success {
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  background: rgba(16, 185, 129, 0.08);
+  color: var(--emerald);
+}
+
+.auth-side {
+  padding: var(--space-xl);
+  min-height: 100%;
+}
+
+.auth-side__title {
+  font-size: 1.6rem;
+  margin-bottom: var(--space-md);
+}
+
+.auth-side__desc {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: var(--space-lg);
+  max-width: 42ch;
+}
+
+.auth-side__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: var(--space-lg);
+}
+
+.auth-side__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.auth-side__item svg {
+  color: var(--accent-light);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.auth-side__footer {
+  font-size: 0.88rem;
+  color: var(--text-tertiary);
+}
+
+.auth-side__footer a {
+  color: var(--accent-light);
+}
+
+@media (max-width: 900px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+  }
+}
