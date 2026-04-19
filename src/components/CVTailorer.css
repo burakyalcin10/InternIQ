@@ -193,6 +193,16 @@
   color: var(--text-muted);
 }
 
+.cv-upload__profile-note {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  background: rgba(16, 185, 129, 0.08);
+  color: var(--emerald);
+  font-size: 0.8rem;
+}
+
 .cv-upload__input {
   display: none;
 }
