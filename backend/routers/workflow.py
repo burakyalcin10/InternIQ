@@ -102,6 +102,8 @@ async def prepare_application(
     }
 
     result = workflow_graph.invoke(initial_state)
+    final_status = result.get("status", "fallback")
+    final_provider = result.get("llm_provider", "fallback") if final_status == "ai" else "fallback"
 
     return {
         "listing": {
@@ -117,7 +119,7 @@ async def prepare_application(
         "interview_questions": result.get("interview_questions", []),
         "interview_sections": result.get("interview_sections", {}),
         "action_plan": result.get("action_plan", {}),
-        "status": result.get("status", "fallback"),
-        "llm_provider": result.get("llm_provider", "fallback"),
+        "status": final_status,
+        "llm_provider": final_provider,
         "cv_source": cv_source,
     }
