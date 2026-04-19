@@ -1,12 +1,33 @@
-"""InternIQ Backend — FastAPI Application."""
+"""InternIQ Backend - FastAPI Application."""
 
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-load_dotenv()
+
+def load_local_env() -> None:
+    """Load backend/.env explicitly; python-dotenv misses it on this setup."""
+    env_path = Path(__file__).resolve().parent / ".env"
+    if not env_path.exists():
+        return
+
+    load_dotenv(env_path, override=False)
+
+    if os.getenv("GEMINI_API_KEY"):
+        return
+
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip())
+
+
+load_local_env()
 
 from routers import auth, companies, crew, cv, interview, listings, workflow
 
