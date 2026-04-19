@@ -10,12 +10,12 @@ const roadmap = [
   {
     week: 'Hafta 3', title: 'CrewAI — Multi-Agent Araştırma Ekibi',
     description: 'Araştırmacı, CV uzmanı ve mülakat koçu agentlardan oluşan bir ekip.',
-    tech: 'CrewAI, LLM Agents', status: 'active',
+    tech: 'CrewAI, LLM Agents', status: 'completed',
   },
   {
-    week: 'Hafta 4', title: 'LangGraph — Başvuru Workflow Motoru',
-    description: 'Başvuru → Hazırlık → Takip akışını yöneten stateful workflow.',
-    tech: 'LangGraph, State Machines', status: 'upcoming',
+    week: 'Hafta 4', title: 'LangGraph — Başvuru Workflow & AI Mülakat',
+    description: 'Multi-step başvuru hazırlık workflow\'u ve AI-destekli stateful mülakat simülasyonu.',
+    tech: 'LangGraph, StateGraph, LangSmith', status: 'active',
   },
   {
     week: 'Hafta 5', title: 'AutoGen — Otonom İlan Tarama',

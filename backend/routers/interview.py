@@ -1,9 +1,20 @@
-"""Interview Router — Mock Interview"""
+"""
+Interview Router — Mock Interview
 
+Two modes:
+  1. Basic endpoints (/interview/ask, /interview/evaluate) — original rule-based
+  2. LangGraph endpoints (/interview/lg/*) — AI-powered stateful interview
+"""
+
+import uuid
 from fastapi import APIRouter
 from pydantic import BaseModel
 
 router = APIRouter()
+
+# ════════════════════════════════════════════════════════════
+#  BASIC MODE — Original rule-based (kept for backward compat)
+# ════════════════════════════════════════════════════════════
 
 QUESTIONS = {
     "technical": [
@@ -69,3 +80,127 @@ async def evaluate_answer(request: EvaluateRequest):
         score = 85
 
     return {"feedback": feedback, "score": score}
+
+
+# ════════════════════════════════════════════════════════════
+#  LANGGRAPH MODE — AI-powered stateful interview
+# ════════════════════════════════════════════════════════════
+
+from langgraph_interview.graph import question_graph, answer_graph
+
+# In-memory session store (production would use Redis)
+_sessions: dict = {}
+
+
+class LGStartRequest(BaseModel):
+    company: str = "Genel"
+    position: str = "Yazılım Mühendisi Stajyeri"
+    category: str = "technical"
+    max_questions: int = 5
+
+
+class LGAnswerRequest(BaseModel):
+    session_id: str
+    answer: str
+
+
+@router.post("/interview/lg/start")
+async def lg_start_interview(req: LGStartRequest):
+    """
+    Start a LangGraph-powered interview session.
+
+    Creates a session, runs the question_graph to generate
+    the first question, and returns the session_id + question.
+
+    Graph: START → generate_question → END
+    """
+    session_id = str(uuid.uuid4())
+
+    initial_state = {
+        "company": req.company,
+        "position": req.position,
+        "category": req.category,
+        "messages": [],
+        "current_question": "",
+        "user_answer": "",
+        "question_count": 0,
+        "max_questions": req.max_questions,
+        "scores": [],
+        "difficulty": "medium",
+        "feedback": "",
+        "phase": "start",
+        "summary": "",
+    }
+
+    # Run question graph
+    result = question_graph.invoke(initial_state)
+
+    # Save session
+    _sessions[session_id] = result
+
+    return {
+        "session_id": session_id,
+        "question": result["current_question"],
+        "question_number": result["question_count"],
+        "total_questions": result["max_questions"],
+        "difficulty": result["difficulty"],
+        "phase": result["phase"],
+        "mode": "langgraph",
+    }
+
+
+@router.post("/interview/lg/answer")
+async def lg_answer_question(req: LGAnswerRequest):
+    """
+    Submit an answer to the current interview question.
+
+    Runs the answer_graph which:
+      1. evaluate_answer   — AI scores the answer
+      2. adjust_difficulty  — Raises/lowers difficulty
+      3. check_progress     — ROUTER: continue or done?
+      4a. generate_question — Next question (if continuing)
+      4b. generate_summary  — Final report (if done)
+
+    Returns feedback + next question (or summary).
+    """
+    session = _sessions.get(req.session_id)
+    if not session:
+        return {"error": "Session not found. Start a new interview."}
+
+    # Update state with user's answer
+    session["user_answer"] = req.answer
+
+    # Run answer graph
+    result = answer_graph.invoke(session)
+
+    # Save updated session
+    _sessions[req.session_id] = result
+
+    response = {
+        "session_id": req.session_id,
+        "feedback": result.get("feedback", ""),
+        "score": result["scores"][-1] if result.get("scores") else 0,
+        "difficulty": result.get("difficulty", "medium"),
+        "phase": result.get("phase", "questioning"),
+        "mode": "langgraph",
+    }
+
+    if result.get("phase") == "completed":
+        # Interview finished
+        response["summary"] = result.get("summary", "")
+        response["scores"] = result.get("scores", [])
+        response["average_score"] = (
+            sum(result["scores"]) / len(result["scores"])
+            if result.get("scores")
+            else 0
+        )
+        response["total_questions"] = len(result.get("scores", []))
+        # Clean up session
+        del _sessions[req.session_id]
+    else:
+        # Next question
+        response["question"] = result.get("current_question", "")
+        response["question_number"] = result.get("question_count", 0)
+        response["total_questions"] = result.get("max_questions", 5)
+
+    return response

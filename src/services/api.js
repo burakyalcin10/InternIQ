@@ -59,7 +59,7 @@ export const analyzeCv = async (jobDescription, cvFile = null, cvText = '') => {
   }
 }
 
-// Interview
+// Interview — Basic Mode
 export const getInterviewQuestion = (category, questionIndex) =>
   fetchAPI('/interview/ask', {
     method: 'POST',
@@ -72,9 +72,40 @@ export const evaluateAnswer = (question, answer) =>
     body: JSON.stringify({ question, answer }),
   })
 
+// Interview — LangGraph Mode
+export const lgStartInterview = (company = 'Genel', position = 'Yazılım Mühendisi Stajyeri', category = 'technical', maxQuestions = 5) =>
+  fetchAPI('/interview/lg/start', {
+    method: 'POST',
+    body: JSON.stringify({
+      company,
+      position,
+      category,
+      max_questions: maxQuestions,
+    }),
+  })
+
+export const lgAnswerQuestion = (sessionId, answer) =>
+  fetchAPI('/interview/lg/answer', {
+    method: 'POST',
+    body: JSON.stringify({
+      session_id: sessionId,
+      answer,
+    }),
+  })
+
 // CrewAI Company Research
 export const startCrewResearch = (companyName) =>
   fetchAPI('/crew/research', {
     method: 'POST',
     body: JSON.stringify({ company_name: companyName }),
+  })
+
+// LangGraph Application Workflow
+export const startWorkflow = (listingId, cvText = '') =>
+  fetchAPI('/workflow/prepare', {
+    method: 'POST',
+    body: JSON.stringify({
+      listing_id: listingId,
+      cv_text: cvText,
+    }),
   })

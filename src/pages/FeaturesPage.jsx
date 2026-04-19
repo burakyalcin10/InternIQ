@@ -2,6 +2,7 @@ import ListingList from '../components/ListingList'
 import CVTailorer from '../components/CVTailorer'
 import CompanyCards from '../components/CompanyCards'
 import MockInterview from '../components/MockInterview'
+import ApplicationWorkflow from '../components/ApplicationWorkflow'
 
 export default function FeaturesPage() {
   return (
@@ -79,6 +80,22 @@ export default function FeaturesPage() {
             </p>
           </div>
           <MockInterview />
+        </div>
+      </section>
+
+      <div className="wrap"><div className="gradient-divider" /></div>
+
+      {/* Application Workflow (LangGraph) */}
+      <section className="section" id="workflow-section">
+        <div className="wrap">
+          <div className="section-head">
+            <span className="section-tag">05 · Başvuru Asistanı</span>
+            <h2 className="section-title">AI ile başvuru hazırlığı.</h2>
+            <p className="section-desc">
+              LangGraph ile 6 adımlı akıllı workflow: ilan analizi → CV değerlendirme → şirket araştırma → mülakat hazırlık → aksiyon planı.
+            </p>
+          </div>
+          <ApplicationWorkflow />
         </div>
       </section>
     </>

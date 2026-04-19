@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from routers import listings, companies, cv, interview, crew
+from routers import listings, companies, cv, interview, crew, workflow
 
 load_dotenv()
 
@@ -31,6 +31,7 @@ app.include_router(companies.router, prefix="/api/v1", tags=["Companies"])
 app.include_router(cv.router, prefix="/api/v1", tags=["CV"])
 app.include_router(interview.router, prefix="/api/v1", tags=["Interview"])
 app.include_router(crew.router, prefix="/api/v1", tags=["CrewAI"])
+app.include_router(workflow.router, prefix="/api/v1", tags=["LangGraph Workflow"])
 
 
 @app.get("/")
