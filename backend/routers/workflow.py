@@ -4,6 +4,7 @@ from fastapi import APIRouter, Header
 from pydantic import BaseModel
 
 from langgraph_workflow.graph import workflow_graph
+from services.langsmith_tracing import get_langsmith_project, runnable_config, tracing_context
 from services.profile_store import get_profile, summarize_cv_profile
 from services.supabase_auth import get_authenticated_user
 
@@ -101,7 +102,23 @@ async def prepare_application(
         "llm_provider": "fallback",
     }
 
-    result = workflow_graph.invoke(initial_state)
+    trace_tags = ["langgraph", "workflow", "application-prep"]
+    trace_metadata = {
+        "listing_id": req.listing_id,
+        "cv_source": cv_source,
+        "has_manual_cv": bool(req.cv_text.strip()),
+        "has_profile_cv": cv_source == "profile",
+    }
+
+    with tracing_context(
+        project_name=get_langsmith_project("InternIQ-Workflow"),
+        tags=trace_tags,
+        metadata=trace_metadata,
+    ):
+        result = workflow_graph.invoke(
+            initial_state,
+            config=runnable_config(tags=trace_tags, metadata=trace_metadata),
+        )
     final_status = result.get("status", "fallback")
     final_provider = result.get("llm_provider", "fallback") if final_status == "ai" else "fallback"
 

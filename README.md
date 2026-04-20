@@ -133,10 +133,34 @@ copy .env.example .env
 |----------|----------|----------|
 | `OPENAI_API_KEY` | For real AI | CrewAI agents + LangGraph interview & workflow |
 | `GEMINI_API_KEY` | For real CV analysis | CV Tailorer Gemini AI mode |
-| `LANGCHAIN_TRACING_V2` | Optional | Enable LangSmith tracing (`true`) |
-| `LANGCHAIN_API_KEY` | Optional | LangSmith API key for observability |
-| `LANGCHAIN_PROJECT` | Optional | LangSmith project name |
+| `LANGSMITH_TRACING` | Optional | Enable LangSmith tracing (`true`) |
+| `LANGSMITH_API_KEY` | Optional | LangSmith API key for observability |
+| `LANGSMITH_PROJECT` | Optional | LangSmith project name |
 | `CORS_ORIGINS` | Yes | Allowed frontend domains |
+
+### LangSmith Tracing
+
+LangSmith tracing is now wired into both LangGraph flows:
+
+- `POST /api/v1/workflow/prepare`
+- `POST /api/v1/interview/lg/start`
+- `POST /api/v1/interview/lg/answer`
+
+To enable it locally, add these values to `backend/.env`:
+
+```env
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=your_langsmith_key_here
+LANGSMITH_PROJECT=InternIQ
+```
+
+When enabled, each run is sent to LangSmith with tags and metadata such as:
+
+- workflow vs interview flow
+- listing id
+- CV source
+- interview session id
+- difficulty / question count
 
 ## 🌐 Deployment
 

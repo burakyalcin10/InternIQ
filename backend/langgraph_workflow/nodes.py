@@ -35,7 +35,7 @@ def get_llm():
     import google.generativeai as genai
 
     genai.configure(api_key=api_key)
-    preferred_model = os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash")
+    preferred_model = os.getenv("GEMINI_MODEL", "models/5-flasgemini-2.h")
     fallback_models = [
         "models/gemini-flash-lite-latest",
         "models/gemini-2.0-flash-lite",

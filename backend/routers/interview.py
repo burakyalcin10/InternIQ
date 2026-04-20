@@ -10,6 +10,8 @@ import uuid
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from services.langsmith_tracing import get_langsmith_project, runnable_config, tracing_context
+
 router = APIRouter()
 
 # ════════════════════════════════════════════════════════════
@@ -132,8 +134,23 @@ async def lg_start_interview(req: LGStartRequest):
         "summary": "",
     }
 
-    # Run question graph
-    result = question_graph.invoke(initial_state)
+    trace_tags = ["langgraph", "interview", "start"]
+    trace_metadata = {
+        "company": req.company,
+        "position": req.position,
+        "category": req.category,
+        "max_questions": req.max_questions,
+    }
+
+    with tracing_context(
+        project_name=get_langsmith_project("InternIQ-Interview"),
+        tags=trace_tags,
+        metadata=trace_metadata,
+    ):
+        result = question_graph.invoke(
+            initial_state,
+            config=runnable_config(tags=trace_tags, metadata=trace_metadata),
+        )
 
     # Save session
     _sessions[session_id] = result
@@ -170,8 +187,23 @@ async def lg_answer_question(req: LGAnswerRequest):
     # Update state with user's answer
     session["user_answer"] = req.answer
 
-    # Run answer graph
-    result = answer_graph.invoke(session)
+    trace_tags = ["langgraph", "interview", "answer"]
+    trace_metadata = {
+        "session_id": req.session_id,
+        "question_count": session.get("question_count", 0),
+        "difficulty": session.get("difficulty", "medium"),
+        "phase": session.get("phase", "questioning"),
+    }
+
+    with tracing_context(
+        project_name=get_langsmith_project("InternIQ-Interview"),
+        tags=trace_tags,
+        metadata=trace_metadata,
+    ):
+        result = answer_graph.invoke(
+            session,
+            config=runnable_config(tags=trace_tags, metadata=trace_metadata),
+        )
 
     # Save updated session
     _sessions[req.session_id] = result
