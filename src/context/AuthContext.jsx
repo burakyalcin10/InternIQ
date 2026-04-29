@@ -41,8 +41,13 @@ export function AuthProvider({ children }) {
     }
 
     const bootstrap = async () => {
-      const { data } = await supabase.auth.getSession()
-      await syncFromSession(data.session)
+      try {
+        const { data } = await supabase.auth.getSession()
+        await syncFromSession(data.session)
+      } catch (error) {
+        console.warn('Supabase session unavailable; continuing as guest.', error)
+        await syncFromSession(null)
+      }
     }
 
     bootstrap()

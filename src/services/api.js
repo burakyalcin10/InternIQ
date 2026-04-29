@@ -3,6 +3,13 @@ import { supabase } from '../lib/supabase'
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
 
 async function getAuthHeaders(options = {}) {
+  if (options.skipAuth) {
+    return {
+      ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+      ...options.headers,
+    }
+  }
+
   const { data } = await supabase.auth.getSession()
   const token = data.session?.access_token
   const isFormData = options.body instanceof FormData
@@ -16,8 +23,9 @@ async function getAuthHeaders(options = {}) {
 
 async function fetchAPI(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`
+  const { skipAuth, ...fetchOptions } = options
   const response = await fetch(url, {
-    ...options,
+    ...fetchOptions,
     headers: await getAuthHeaders(options),
   })
 
@@ -58,13 +66,13 @@ export const uploadProfileCv = async (cvFile = null, cvText = '') => {
 // Listings
 export const getListings = (params = {}) => {
   const query = new URLSearchParams(params).toString()
-  return fetchAPI(`/listings${query ? `?${query}` : ''}`)
+  return fetchAPI(`/listings${query ? `?${query}` : ''}`, { skipAuth: true })
 }
-export const getListing = (id) => fetchAPI(`/listings/${id}`)
+export const getListing = (id) => fetchAPI(`/listings/${id}`, { skipAuth: true })
 
 // Companies
-export const getCompanies = () => fetchAPI('/companies')
-export const getCompany = (id) => fetchAPI(`/companies/${id}`)
+export const getCompanies = () => fetchAPI('/companies', { skipAuth: true })
+export const getCompany = (id) => fetchAPI(`/companies/${id}`, { skipAuth: true })
 
 // CV Analysis
 export const analyzeCv = async (jobDescription, cvFile = null, cvText = '') => {
@@ -87,12 +95,14 @@ export const analyzeCv = async (jobDescription, cvFile = null, cvText = '') => {
 export const getInterviewQuestion = (category, questionIndex) =>
   fetchAPI('/interview/ask', {
     method: 'POST',
+    skipAuth: true,
     body: JSON.stringify({ category, question_index: questionIndex }),
   })
 
 export const evaluateAnswer = (question, answer) =>
   fetchAPI('/interview/evaluate', {
     method: 'POST',
+    skipAuth: true,
     body: JSON.stringify({ question, answer }),
   })
 
@@ -102,20 +112,24 @@ export const lgStartInterview = (
   position = 'Yazılım Mühendisi Stajyeri',
   category = 'technical',
   maxQuestions = 5,
+  candidateProfile = {},
 ) =>
   fetchAPI('/interview/lg/start', {
     method: 'POST',
+    skipAuth: true,
     body: JSON.stringify({
       company,
       position,
       category,
       max_questions: maxQuestions,
+      candidate_profile: candidateProfile,
     }),
   })
 
 export const lgAnswerQuestion = (sessionId, answer) =>
   fetchAPI('/interview/lg/answer', {
     method: 'POST',
+    skipAuth: true,
     body: JSON.stringify({
       session_id: sessionId,
       answer,
