@@ -5,9 +5,40 @@ import {
   getInterviewQuestion, evaluateAnswer,
   lgStartInterview, lgAnswerQuestion
 } from '../services/api'
+import { useAuth } from '../context/useAuth'
 import './MockInterview.css'
 
+const normalizeCommand = (value) => (
+  value
+    .trim()
+    .toLocaleLowerCase('tr-TR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+)
+
+const isStartCommand = (value) => {
+  const command = normalizeCommand(value)
+  return command === 'basla' || command === 'start'
+}
+
+const buildInterviewProfile = (profile) => {
+  if (!profile) return {}
+
+  return {
+    summary: profile.summary || '',
+    skills: profile.skills || [],
+    education_summary: profile.education_summary || '',
+    experience_level: profile.experience_level || '',
+    projects: (profile.projects || []).slice(0, 4).map((project) => ({
+      title: project.title || '',
+      description: project.description || '',
+      skills: project.skills || [],
+    })),
+  }
+}
+
 export default function MockInterview() {
+  const { profile } = useAuth()
   const [category, setCategory] = useState('technical')
   const [mode, setMode] = useState('ai') // 'ai' (LangGraph) or 'basic'
   const [messages, setMessages] = useState([
@@ -21,10 +52,16 @@ export default function MockInterview() {
   const [sessionId, setSessionId] = useState(null)
   const [difficulty, setDifficulty] = useState('medium')
   const [lastScore, setLastScore] = useState(null)
-  const messagesEndRef = useRef(null)
+  const messagesRef = useRef(null)
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const messageList = messagesRef.current
+    if (!messageList) return
+
+    messageList.scrollTo({
+      top: messageList.scrollHeight,
+      behavior: 'smooth',
+    })
   }, [messages])
 
   const addMessage = (role, text) => {
@@ -35,7 +72,13 @@ export default function MockInterview() {
 
   const handleAIStart = async () => {
     try {
-      const data = await lgStartInterview('Genel', 'Yazılım Mühendisi Stajyeri', category, 5)
+      const data = await lgStartInterview(
+        'Genel',
+        'Yazılım Mühendisi Stajyeri',
+        category,
+        5,
+        buildInterviewProfile(profile),
+      )
       setSessionId(data.session_id)
       setStarted(true)
       setDifficulty(data.difficulty || 'medium')
@@ -100,7 +143,7 @@ export default function MockInterview() {
     addMessage('user', text)
     setWaiting(true)
 
-    if (text.toLowerCase() === 'başla' || text.toLowerCase() === 'basla') {
+    if (isStartCommand(text)) {
       setQuestionIndex(0)
       if (mode === 'ai') {
         await handleAIStart()
@@ -243,7 +286,7 @@ export default function MockInterview() {
         </div>
       )}
 
-      <div className="chat__messages">
+      <div className="chat__messages" ref={messagesRef}>
         <AnimatePresence>
           {messages.map((msg, i) => (
             <motion.div
@@ -260,7 +303,6 @@ export default function MockInterview() {
             </motion.div>
           ))}
         </AnimatePresence>
-        <div ref={messagesEndRef} />
       </div>
 
       <div className="chat__input-row">

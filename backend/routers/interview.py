@@ -8,7 +8,7 @@ Two modes:
 
 import uuid
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from services.langsmith_tracing import get_langsmith_project, runnable_config, tracing_context
 
@@ -99,6 +99,7 @@ class LGStartRequest(BaseModel):
     position: str = "Yazılım Mühendisi Stajyeri"
     category: str = "technical"
     max_questions: int = 5
+    candidate_profile: dict = Field(default_factory=dict)
 
 
 class LGAnswerRequest(BaseModel):
@@ -117,16 +118,22 @@ async def lg_start_interview(req: LGStartRequest):
     Graph: START → generate_question → END
     """
     session_id = str(uuid.uuid4())
+    target_questions = max(3, min(req.max_questions, 8))
 
     initial_state = {
         "company": req.company,
         "position": req.position,
         "category": req.category,
+        "candidate_profile": req.candidate_profile,
+        "session_seed": session_id[:8],
         "messages": [],
+        "asked_questions": [],
         "current_question": "",
         "user_answer": "",
         "question_count": 0,
-        "max_questions": req.max_questions,
+        "target_questions": target_questions,
+        "max_questions": target_questions,
+        "question_limit": min(target_questions + 2, 8),
         "scores": [],
         "difficulty": "medium",
         "feedback": "",
@@ -139,7 +146,8 @@ async def lg_start_interview(req: LGStartRequest):
         "company": req.company,
         "position": req.position,
         "category": req.category,
-        "max_questions": req.max_questions,
+        "max_questions": target_questions,
+        "has_candidate_profile": bool(req.candidate_profile),
     }
 
     with tracing_context(
