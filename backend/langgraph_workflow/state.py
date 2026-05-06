@@ -16,6 +16,7 @@ class WorkflowState(TypedDict):
     listing_id: int
     cv_text: str
     candidate_profile: dict
+    mcp_context: dict
 
     # ── Listing Analysis ──
     listing_data: dict

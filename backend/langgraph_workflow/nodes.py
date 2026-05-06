@@ -35,14 +35,15 @@ def get_llm():
     import google.generativeai as genai
 
     genai.configure(api_key=api_key)
-    preferred_model = os.getenv("GEMINI_MODEL", "models/5-flasgemini-2.h")
+    preferred_model = os.getenv("GEMINI_MODEL", "models/gemini-2.0-flash-lite")
+    timeout = int(os.getenv("GEMINI_TIMEOUT_SECONDS", "12"))
     fallback_models = [
         "models/gemini-flash-lite-latest",
         "models/gemini-2.0-flash-lite",
         "models/gemini-2.0-flash",
     ]
     ordered_models = [preferred_model] + [name for name in fallback_models if name != preferred_model]
-    return {"genai": genai, "models": ordered_models}
+    return {"genai": genai, "models": ordered_models, "timeout": timeout}
 
 
 def _invoke_model_text(model, prompt: str) -> str:
@@ -50,7 +51,10 @@ def _invoke_model_text(model, prompt: str) -> str:
 
     for model_name in model["models"]:
         try:
-            response = model["genai"].GenerativeModel(model_name).generate_content(prompt)
+            response = model["genai"].GenerativeModel(model_name).generate_content(
+                prompt,
+                request_options={"timeout": model.get("timeout", 12)},
+            )
             text = getattr(response, "text", "").strip()
             if text:
                 return text
@@ -121,14 +125,18 @@ def _format_candidate_profile(profile: dict) -> str:
 def analyze_listing(state: dict) -> dict:
     """Load listing data and extract key requirements."""
     listing_id = state.get("listing_id", 1)
+    mcp_listing = state.get("mcp_context", {}).get("listing", {})
 
-    # Load listing from JSON
-    with open(LISTINGS_PATH, "r", encoding="utf-8") as f:
-        listings = json.load(f)
+    if mcp_listing:
+        listing = mcp_listing
+    else:
+        # Load listing from JSON
+        with open(LISTINGS_PATH, "r", encoding="utf-8") as f:
+            listings = json.load(f)
 
-    listing = next((l for l in listings if l["id"] == listing_id), None)
-    if not listing:
-        listing = listings[0] if listings else {}
+        listing = next((l for l in listings if l["id"] == listing_id), None)
+        if not listing:
+            listing = listings[0] if listings else {}
 
     # Extract requirements
     requirements = listing.get("requirements", [])
@@ -276,6 +284,20 @@ def suggest_improvements(state: dict) -> dict:
 def research_company(state: dict) -> dict:
     """Load company info from existing data."""
     company_name = state.get("company_name", "")
+    mcp_company = state.get("mcp_context", {}).get("company", {})
+    if mcp_company:
+        return {
+            "company_info": {
+                "name": mcp_company.get("name", company_name),
+                "industry": mcp_company.get("industry", "Teknoloji"),
+                "rating": mcp_company.get("rating", "N/A"),
+                "tech_stack": mcp_company.get("tech_stack", []),
+                "culture": mcp_company.get("culture", ""),
+                "interview_style": mcp_company.get("interview_style", ""),
+                "recent_news": mcp_company.get("recent_news", ""),
+            }
+        }
+
     normalized_name = normalize_company_name(company_name)
 
     with open(COMPANIES_PATH, "r", encoding="utf-8") as f:

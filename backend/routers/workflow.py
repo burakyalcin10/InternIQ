@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from langgraph_workflow.graph import workflow_graph
 from services.langsmith_tracing import get_langsmith_project, runnable_config, tracing_context
+from services.mcp_bridge import run_interniq_mcp_demo
 from services.profile_store import get_profile, summarize_cv_profile
 from services.supabase_auth import get_authenticated_user
 
@@ -82,10 +83,14 @@ async def prepare_application(
             "projects": [],
         }
 
+    mcp_result = await run_interniq_mcp_demo(req.listing_id, cv_text)
+    mcp_context = mcp_result.get("mcp_context", {}) if mcp_result.get("mcp_status") != "error" else {}
+
     initial_state = {
         "listing_id": req.listing_id,
         "cv_text": cv_text,
         "candidate_profile": candidate_profile,
+        "mcp_context": mcp_context,
         "listing_data": {},
         "job_requirements": [],
         "job_description": "",
@@ -121,6 +126,20 @@ async def prepare_application(
         )
     final_status = result.get("status", "fallback")
     final_provider = result.get("llm_provider", "fallback") if final_status == "ai" else "fallback"
+    mcp_trace = [
+        *mcp_result.get("mcp_trace", []),
+        {
+            "step": "langgraph_result",
+            "label": "LangGraph Result",
+            "detail": {
+                "cv_score": result.get("cv_score", 0),
+                "company": result.get("company_name"),
+                "status": final_status,
+                "llm_provider": final_provider,
+            },
+            "status": "ok",
+        },
+    ]
 
     return {
         "listing": {
@@ -139,4 +158,8 @@ async def prepare_application(
         "status": final_status,
         "llm_provider": final_provider,
         "cv_source": cv_source,
+        "mcp_status": mcp_result.get("mcp_status", "error"),
+        "mcp_trace": mcp_trace,
+        "mcp_context": mcp_context,
+        "mcp_capabilities": mcp_result.get("mcp_capabilities", {}),
     }
