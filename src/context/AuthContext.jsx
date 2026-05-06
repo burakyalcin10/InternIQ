@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { AuthContext } from './auth-context'
 import { getCurrentUser, getProfile, uploadProfileCv } from '../services/api'
 import { formatAuthErrorMessage } from '../lib/auth-errors'
-import { supabase } from '../lib/supabase'
+import { clearSupabaseAuthStorage, supabase } from '../lib/supabase'
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
@@ -46,6 +46,7 @@ export function AuthProvider({ children }) {
         await syncFromSession(data.session)
       } catch (error) {
         console.warn('Supabase session unavailable; continuing as guest.', error)
+        clearSupabaseAuthStorage()
         await syncFromSession(null)
       }
     }
@@ -98,6 +99,8 @@ export function AuthProvider({ children }) {
   }
 
   const login = async ({ email, password }) => {
+    clearSupabaseAuthStorage()
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -119,6 +122,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     const { error } = await supabase.auth.signOut()
+    clearSupabaseAuthStorage()
     if (error) {
       throw error
     }

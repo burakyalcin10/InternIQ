@@ -14,6 +14,14 @@ export function formatAuthErrorMessage(error) {
     return 'E-posta veya şifre hatalı görünüyor.'
   }
 
+  if (message.includes('invalid refresh token') || message.includes('refresh token not found')) {
+    return 'Oturum bilginiz eskimiÅŸ. SayfayÄ± yenileyip tekrar giriÅŸ yapmayÄ± deneyin.'
+  }
+
+  if (message.includes('failed to fetch') || message.includes('authretryablefetcherror')) {
+    return 'Supabase Auth servisine ulaÅŸÄ±lamadÄ±. BaÄŸlantÄ±nÄ±zÄ± kontrol edip tekrar deneyin.'
+  }
+
   if (message.includes('email not confirmed')) {
     return 'E-posta adresinizi henüz doğrulamadınız. Gelen kutunuzu ve spam klasörünü kontrol edin.'
   }

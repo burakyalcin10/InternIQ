@@ -28,3 +28,6 @@ npm-debug.log*
 
 # Backup
 _old/
+
+# Local profile cache
+backend/data/profiles.json
