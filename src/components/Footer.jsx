@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Sparkles, ExternalLink, Globe, Mail } from 'lucide-react'
+import { ExternalLink, Globe, Mail } from 'lucide-react'
+import Logo from './Logo'
 import './Footer.css'
 
 export default function Footer() {
@@ -9,9 +10,7 @@ export default function Footer() {
         <div className="footer__grid">
           <div className="footer__brand-col">
             <Link to="/" className="footer__brand">
-              <div className="footer__logo">
-                <Sparkles size={16} />
-              </div>
+              <Logo size={28} standalone />
               <span>InternIQ</span>
             </Link>
             <p className="footer__tagline">

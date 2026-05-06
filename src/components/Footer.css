@@ -28,14 +28,10 @@
 }
 
 .footer__logo {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  background: var(--gradient-accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  flex-shrink: 0;
 }
 
 .footer__tagline {

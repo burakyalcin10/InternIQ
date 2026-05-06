@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, Sparkles, UserRound, X } from 'lucide-react'
+import { Menu, UserRound, X } from 'lucide-react'
 import { useAuth } from '../context/useAuth'
+import Logo from './Logo'
 import './Navbar.css'
 
 export default function Navbar() {
@@ -19,6 +20,7 @@ export default function Navbar() {
   const navLinks = [
     { to: '/', label: 'Ana Sayfa' },
     { to: '/features', label: 'Özellikler' },
+    { to: '/ajan', label: 'MCP Ajan' },
     { to: '/about', label: 'Hakkında' },
     ...(isAuthenticated ? [{ to: '/hesabim', label: 'Hesabım' }] : []),
   ]
@@ -28,7 +30,7 @@ export default function Navbar() {
       <div className="navbar__inner">
         <Link to="/" className="navbar__brand" onClick={() => setIsOpen(false)}>
           <div className="navbar__logo">
-            <Sparkles size={18} />
+            <Logo size={16} />
           </div>
           <span>InternIQ</span>
         </Link>
