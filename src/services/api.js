@@ -152,3 +152,14 @@ export const startWorkflow = (listingId, cvText = '') =>
       cv_text: cvText,
     }),
   })
+
+// MCP Demo
+export const runMcpDemo = (listingId, cvText = '') =>
+  fetchAPI('/mcp/demo', {
+    method: 'POST',
+    skipAuth: true,
+    body: JSON.stringify({
+      listing_id: listingId,
+      cv_text: cvText,
+    }),
+  })

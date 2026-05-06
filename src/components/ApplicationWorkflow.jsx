@@ -91,11 +91,55 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
   const interviewSections = result?.interview_sections || {}
   const cvSpecificQuestions = interviewSections.cv_specific || []
   const companySpecificQuestions = interviewSections.company_specific || []
+  const mcpTrace = result?.mcp_trace || []
+  const mcpCapabilities = result?.mcp_capabilities || {}
+  const mcpContext = result?.mcp_context || {}
+  const mcpTools = mcpCapabilities.tools || []
+  const mcpResources = mcpCapabilities.resources || []
+  const mcpPrompts = mcpCapabilities.prompts || []
   const selectedListing = listingId
     ? { id: listingId, position: listingTitle, company: companyName }
     : listings.find((listing) => listing.id === Number(selectedListingId))
 
   const usingSavedCv = !cvText.trim() && isAuthenticated && profile?.has_cv
+
+  const formatMcpDetail = (traceItem) => {
+    const detail = traceItem.detail
+    if (!detail) return ''
+    if (typeof detail === 'string') return detail
+
+    if (traceItem.step === 'discover_tools' && Array.isArray(detail)) {
+      return `${detail.length} tools: ${detail.map((tool) => tool.name).join(', ')}`
+    }
+
+    if (traceItem.step === 'discover_resources' && Array.isArray(detail)) {
+      return `${detail.length} resources: ${detail.map((resource) => resource.uri).join(', ')}`
+    }
+
+    if (traceItem.step === 'read_resources' && typeof detail === 'object') {
+      return Object.entries(detail)
+        .map(([uri, value]) => `${uri}: ${value.items ?? 'read'} items`)
+        .join(' | ')
+    }
+
+    if (traceItem.step === 'get_prompt') {
+      return detail.name || 'application-prep-prompt'
+    }
+
+    if (traceItem.step === 'call_tool') {
+      return `${detail.position || 'Selected listing'} @ ${detail.company || 'company'}`
+    }
+
+    if (traceItem.step === 'return_context') {
+      return `Tools: ${(detail.tools_used || []).join(', ')}`
+    }
+
+    if (traceItem.step === 'langgraph_result') {
+      return `CV score ${detail.cv_score} | ${detail.status} | ${detail.llm_provider}`
+    }
+
+    return JSON.stringify(detail)
+  }
 
   const handleRun = async () => {
     if (!selectedListingId) {
@@ -364,6 +408,97 @@ export default function ApplicationWorkflow({ listingId, listingTitle, companyNa
                 ))}
               </div>
             </div>
+
+            {mcpTrace.length > 0 && (
+              <div className="workflow__mcp-panel glass-card">
+                <div className="workflow__mcp-head">
+                  <div>
+                    <div className="workflow__result-badge">
+                      <Zap size={13} /> MCP Protocol Trace
+                      <span className="workflow__result-mode">
+                        {' '}· {result.mcp_status === 'ok' ? 'stdio connected' : result.mcp_status || 'unknown'}
+                      </span>
+                    </div>
+                    <h3>Host - Client - Server flow</h3>
+                    <p>
+                      InternIQ starts a local MCP server over stdio, discovers tools/resources/prompts, then returns
+                      application context for the LangGraph workflow.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="workflow__mcp-roles">
+                  <span><strong>Host</strong> InternIQ</span>
+                  <span><strong>Client</strong> mcp_bridge.py</span>
+                  <span><strong>Server</strong> interniq_mcp.py</span>
+                  <span><strong>Transport</strong> stdio</span>
+                </div>
+
+                <div className="workflow__mcp-timeline">
+                  {mcpTrace.map((traceItem, index) => (
+                    <div
+                      key={`${traceItem.step}-${index}`}
+                      className={`workflow__mcp-step ${traceItem.status === 'error' ? 'workflow__mcp-step--error' : ''}`}
+                    >
+                      <span className="workflow__mcp-step-num">{index + 1}</span>
+                      <div>
+                        <strong>{traceItem.label}</strong>
+                        <p>{formatMcpDetail(traceItem)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="workflow__mcp-grid">
+                  <div className="workflow__mcp-box">
+                    <strong>Tools</strong>
+                    {mcpTools.map((tool) => (
+                      <div key={tool.name} className="workflow__mcp-item">
+                        <span>{tool.name}</span>
+                        <p>{tool.description}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="workflow__mcp-box">
+                    <strong>Resources</strong>
+                    {mcpResources.map((resource) => (
+                      <div key={resource.uri} className="workflow__mcp-item">
+                        <span>{resource.uri}</span>
+                        <p>{resource.description || resource.name}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="workflow__mcp-box">
+                    <strong>Prompts</strong>
+                    {mcpPrompts.map((prompt) => (
+                      <div key={prompt.name} className="workflow__mcp-item">
+                        <span>{prompt.name}</span>
+                        <p>{prompt.description}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="workflow__mcp-box">
+                    <strong>Tool Result</strong>
+                    <div className="workflow__mcp-item">
+                      <span>{mcpContext.prompt_name || 'application-prep-prompt'}</span>
+                      <p>
+                        {mcpContext.listing?.position || result.listing?.position} @ {mcpContext.company?.name || result.listing?.company}
+                      </p>
+                      {mcpContext.application_context?.core_requirements?.length > 0 && (
+                        <div className="workflow__mcp-tags">
+                          {mcpContext.application_context.core_requirements.slice(0, 5).map((requirement, index) => (
+                            <span key={index} className="tag">{requirement}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="workflow__result-grid">
               <motion.div className="workflow__result-card glass-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
