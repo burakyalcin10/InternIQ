@@ -4,6 +4,7 @@ import Navbar from './components/Navbar'
 import ScrollToTop from './components/ScrollToTop'
 import AboutPage from './pages/AboutPage'
 import AccountPage from './pages/AccountPage'
+import AgentPage from './pages/AgentPage'
 import CompanyResearch from './pages/CompanyResearch'
 import FeaturesPage from './pages/FeaturesPage'
 import HomePage from './pages/HomePage'
@@ -26,6 +27,7 @@ function App() {
           <Route path="/hesabim" element={<AccountPage />} />
           <Route path="/staj/:id" element={<ListingDetail />} />
           <Route path="/company-research/:name" element={<CompanyResearch />} />
+          <Route path="/ajan" element={<AgentPage />} />
         </Routes>
       </main>
       <Footer />

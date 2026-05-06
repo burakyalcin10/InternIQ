@@ -29,7 +29,7 @@ def load_local_env() -> None:
 
 load_local_env()
 
-from routers import auth, companies, crew, cv, interview, listings, mcp, workflow
+from routers import agent, auth, companies, crew, cv, interview, listings, mcp, workflow
 
 app = FastAPI(
     title="InternIQ API",
@@ -67,6 +67,7 @@ app.include_router(interview.router, prefix="/api/v1", tags=["Interview"])
 app.include_router(crew.router, prefix="/api/v1", tags=["CrewAI"])
 app.include_router(workflow.router, prefix="/api/v1", tags=["LangGraph Workflow"])
 app.include_router(mcp.router, prefix="/api/v1", tags=["MCP Demo"])
+app.include_router(agent.router, prefix="/api/v1", tags=["MCP Agent"])
 
 
 @app.get("/")

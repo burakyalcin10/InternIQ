@@ -153,6 +153,14 @@ export const startWorkflow = (listingId, cvText = '') =>
     }),
   })
 
+// MCP AI Agent
+export const agentChat = (message) =>
+  fetchAPI('/agent/chat', {
+    method: 'POST',
+    skipAuth: true,
+    body: JSON.stringify({ message }),
+  })
+
 // MCP Demo
 export const runMcpDemo = (listingId, cvText = '') =>
   fetchAPI('/mcp/demo', {
