@@ -40,6 +40,8 @@ npm run dev                     # http://localhost:5173
 ```
 
 > Frontend config: copy `.env.example` to `.env` at the repo root and set `VITE_API_URL=http://localhost:8000/api/v1` (default already correct), plus optional Supabase keys for auth.
+>
+> ⚠️ If a `.env.local` exists at the repo root, Vite loads it **after** `.env` and its values win. If listings fail to load with a network error, the most common cause is a stale `VITE_API_URL` in `.env.local` pointing to a different port than the one uvicorn is bound to.
 
 ### 4. (Optional) MCP Terminal Client
 After step 2, the `interniqmcp` console script becomes available inside the backend venv:
