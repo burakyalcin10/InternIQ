@@ -147,12 +147,17 @@ def run_crew(company_name: str) -> dict:
         # LLM — use gpt-4o-mini for cost efficiency (~1-2 cents per request)
         llm = LLM(model="gpt-4o-mini", temperature=0.7, max_tokens=1024)
 
-        # Create Agents
+        # Agents must be silent here: when this code runs inside the MCP stdio
+        # subprocess, anything written to stdout corrupts the MCP protocol
+        # frames. Verbose CrewAI logs (with emojis) crash on Windows charmap
+        # encoding too. Set CREWAI_VERBOSE=1 to re-enable for local debugging.
+        agent_verbose = os.getenv("CREWAI_VERBOSE", "0") == "1"
+
         culture_researcher = Agent(
             role=agents_config["culture_researcher"]["role"].format(company=company_name),
             goal=agents_config["culture_researcher"]["goal"].format(company=company_name),
             backstory=agents_config["culture_researcher"]["backstory"].format(company=company_name),
-            verbose=True,
+            verbose=agent_verbose,
             allow_delegation=False,
             llm=llm,
         )
@@ -161,7 +166,7 @@ def run_crew(company_name: str) -> dict:
             role=agents_config["tech_analyst"]["role"].format(company=company_name),
             goal=agents_config["tech_analyst"]["goal"].format(company=company_name),
             backstory=agents_config["tech_analyst"]["backstory"].format(company=company_name),
-            verbose=True,
+            verbose=agent_verbose,
             allow_delegation=False,
             llm=llm,
         )
@@ -170,7 +175,7 @@ def run_crew(company_name: str) -> dict:
             role=agents_config["report_writer"]["role"].format(company=company_name),
             goal=agents_config["report_writer"]["goal"].format(company=company_name),
             backstory=agents_config["report_writer"]["backstory"].format(company=company_name),
-            verbose=True,
+            verbose=agent_verbose,
             allow_delegation=False,
             llm=llm,
         )

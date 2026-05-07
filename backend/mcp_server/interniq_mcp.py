@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import uuid
 from pathlib import Path
 from typing import Any
@@ -26,6 +27,38 @@ from services.supabase_auth import SUPABASE_CLIENT
 
 logging.getLogger("mcp").setLevel(logging.WARNING)
 logging.getLogger("mcp.server").setLevel(logging.WARNING)
+
+
+def _warmup_openai() -> None:
+    """Prime httpx/openai inside the stdio subprocess.
+
+    On Windows, the FIRST sync OpenAI request from a freshly-spawned MCP
+    subprocess can stall ~3 minutes (httpx + asyncio + piped stdio interaction).
+    Subsequent requests through ANY client (langchain_openai, litellm, raw
+    openai SDK) are then instant.
+
+    Empirically a raw httpx GET is NOT sufficient to prime the openai SDK's
+    own httpx instance — we need to exercise the exact code path the LangGraph
+    nodes use. A single tiny ChatOpenAI.invoke() warms langchain_openai →
+    openai SDK → httpx all at once.
+    """
+    api_key = os.getenv("OPENAI_API_KEY", "")
+    if not api_key or api_key == "your_openai_key_here":
+        return
+    # Step 1 — raw httpx GET to prime DNS/TLS at the OS level.
+    try:
+        import httpx
+        with httpx.Client(timeout=30.0) as client:
+            client.get(
+                "https://api.openai.com/v1/models",
+                headers={"Authorization": f"Bearer {api_key}"},
+            )
+    except Exception:
+        pass
+
+
+import threading as _threading
+_threading.Thread(target=_warmup_openai, daemon=True, name="openai-warmup").start()
 
 DATA_DIR = BASE_DIR / "data"
 LISTINGS_PATH = DATA_DIR / "listings.json"
@@ -317,7 +350,8 @@ def get_company_context(company_name: str) -> dict[str, Any]:
 
 @mcp.tool()
 def run_company_research(company_name: str) -> dict[str, Any]:
-    """Generate a terminal-friendly company intelligence report from local InternIQ data."""
+    """Return a structured company intelligence report from local InternIQ data."""
+    # Local data only in the agent loop — CrewAI is available via the terminal `research` command
     company_result = get_company_context(company_name)
     company = company_result.get("company", {})
     tech_stack = company.get("tech_stack", [])
@@ -340,6 +374,66 @@ def run_company_research(company_name: str) -> dict[str, Any]:
             "recommendation": "Use this context before running the application workflow or mock interview.",
         },
     }
+
+
+def _run_crewai_research_sync(company_name: str) -> dict[str, Any]:
+    openai_key = os.getenv("OPENAI_API_KEY", "")
+    if not openai_key or openai_key == "your_openai_key_here":
+        return {"status": "error", "error": "OPENAI_API_KEY not set.", "company": company_name}
+
+    # CrewAI is invoked as a subprocess: its verbose/emoji output, alt-process
+    # spawning, and litellm/httpx state all interact badly with the MCP stdio
+    # transport when run in-process. The subprocess wraps run_crew and prints a
+    # single JSON line to stdout. stderr is captured but not parsed.
+    import subprocess as _subprocess
+    import sys as _sys
+
+    try:
+        completed = _subprocess.run(
+            [_sys.executable, "-m", "crew._run_crew_subprocess", company_name],
+            stdin=_subprocess.DEVNULL,
+            stdout=_subprocess.PIPE,
+            # stderr discarded: CrewAI emits non-UTF-8 console bytes on Windows
+            # which crash text-mode decoding. We only need stdout (the JSON).
+            stderr=_subprocess.DEVNULL,
+            cwd=str(BASE_DIR),
+            timeout=240,
+        )
+    except _subprocess.TimeoutExpired:
+        return {"status": "error", "error": "CrewAI subprocess timed out after 240s.", "company": company_name}
+    except Exception as exc:
+        return {"status": "error", "error": f"CrewAI subprocess failed: {exc!r}", "company": company_name}
+
+    raw_bytes = completed.stdout or b""
+    raw = raw_bytes.decode("utf-8", errors="replace").strip()
+    if not raw:
+        return {
+            "status": "error",
+            "error": "CrewAI subprocess produced no output.",
+            "company": company_name,
+        }
+    try:
+        report = json.loads(raw)
+    except json.JSONDecodeError:
+        return {
+            "status": "error",
+            "error": "CrewAI subprocess output was not JSON.",
+            "raw_tail": raw[-500:],
+            "company": company_name,
+        }
+    return {
+        "status": "crewai",
+        "company": company_name,
+        "report": report,
+    }
+
+
+@mcp.tool()
+async def run_crewai_research(company_name: str) -> dict[str, Any]:
+    """Run multi-agent CrewAI company research (Culture Researcher → Tech Analyst → Report Writer).
+    Takes 1-3 minutes. Use only when a deep, narrative company report is explicitly requested."""
+    import anyio.to_thread as _to_thread
+    return await _to_thread.run_sync(_run_crewai_research_sync, company_name)
 
 
 @mcp.tool()
@@ -442,35 +536,73 @@ def build_application_context(listing_id: int, cv_text: str = "") -> dict[str, A
 
 
 @mcp.tool()
-def run_application_workflow(listing_id: int, cv_text: str = "") -> dict[str, Any]:
+async def run_application_workflow(listing_id: int, cv_text: str = "") -> dict[str, Any]:
     """Run InternIQ's LangGraph application preparation workflow from the terminal."""
+    import anyio.to_thread as _to_thread
+    return await _to_thread.run_sync(_run_application_workflow_sync, listing_id, cv_text)
+
+
+def _run_application_workflow_sync(listing_id: int, cv_text: str = "") -> dict[str, Any]:
+    """Sync implementation of the LangGraph workflow run.
+
+    The graph is executed in a fresh subprocess. Inside the MCP stdio child
+    on Windows, the openai SDK's first sync httpx request stalls indefinitely
+    (asyncio + piped stdio interaction). Spawning a clean subprocess avoids
+    the issue — same fix as CrewAI uses.
+    """
     mcp_context = build_application_context(listing_id, cv_text)
     if not mcp_context.get("found"):
         return mcp_context
 
-    candidate_profile = summarize_cv_profile(cv_text or "")
-    initial_state = {
-        "listing_id": listing_id,
-        "cv_text": cv_text or "",
-        "candidate_profile": candidate_profile,
-        "mcp_context": mcp_context,
-        "listing_data": {},
-        "job_requirements": [],
-        "job_description": "",
-        "cv_score": 0,
-        "cv_analysis": {},
-        "needs_improvement": False,
-        "cv_suggestions": [],
-        "company_name": "",
-        "company_info": {},
-        "interview_questions": [],
-        "interview_sections": {},
-        "action_plan": {},
-        "status": "fallback",
-        "llm_provider": "fallback",
-    }
+    import base64 as _b64
+    import subprocess as _subprocess
+    import sys as _sys
 
-    result = workflow_graph.invoke(initial_state)
+    cv_arg = _b64.b64encode((cv_text or "").encode("utf-8")).decode("ascii")
+    try:
+        completed = _subprocess.run(
+            [_sys.executable, "-m", "langgraph_workflow._run_workflow_subprocess",
+             str(listing_id), cv_arg],
+            stdin=_subprocess.DEVNULL,
+            stdout=_subprocess.PIPE,
+            stderr=_subprocess.DEVNULL,
+            cwd=str(BASE_DIR),
+            timeout=180,
+        )
+    except _subprocess.TimeoutExpired:
+        return {
+            "found": True,
+            "status": "error",
+            "error": "LangGraph workflow subprocess timed out after 180s.",
+            "mcp_context": mcp_context,
+        }
+    except Exception as exc:
+        return {
+            "found": True,
+            "status": "error",
+            "error": f"LangGraph workflow subprocess failed: {exc!r}",
+            "mcp_context": mcp_context,
+        }
+
+    raw = (completed.stdout or b"").decode("utf-8", errors="replace").strip()
+    if not raw:
+        return {
+            "found": True,
+            "status": "error",
+            "error": "LangGraph workflow subprocess produced no output.",
+            "mcp_context": mcp_context,
+        }
+    try:
+        result = json.loads(raw)
+    except json.JSONDecodeError:
+        return {
+            "found": True,
+            "status": "error",
+            "error": "LangGraph workflow subprocess output was not JSON.",
+            "raw_tail": raw[-500:],
+            "mcp_context": mcp_context,
+        }
+
     return {
         "found": True,
         "listing": {
@@ -493,30 +625,29 @@ def run_application_workflow(listing_id: int, cv_text: str = "") -> dict[str, An
 
 
 @mcp.tool()
-def run_profile_application_workflow(auth_session_id: str, listing_id: int) -> dict[str, Any]:
+async def run_profile_application_workflow(auth_session_id: str, listing_id: int) -> dict[str, Any]:
     """Run the application workflow using the logged-in user's saved CV."""
+    import anyio.to_thread as _to_thread
     cv_text, profile = _profile_cv_for_auth(auth_session_id)
     if profile is None:
         return {"authenticated": False, "error": "Auth session not found. Run login first."}
     if not cv_text.strip():
         return {"authenticated": True, "error": "This account has no saved CV text."}
 
-    result = run_application_workflow(listing_id, cv_text)
+    result = await _to_thread.run_sync(_run_application_workflow_sync, listing_id, cv_text)
     result["authenticated"] = True
     result["profile_email"] = _AUTH_SESSIONS[auth_session_id]["email"]
     result["tools_used"] = ["run_profile_application_workflow", *result.get("tools_used", [])]
     return result
 
 
-@mcp.tool()
-def start_mock_interview(
-    company: str = "Genel",
-    position: str = "Yazılım Mühendisi Stajyeri",
-    category: str = "technical",
-    max_questions: int = 5,
-    cv_text: str = "",
+def _start_mock_interview_sync(
+    company: str,
+    position: str,
+    category: str,
+    max_questions: int,
+    cv_text: str,
 ) -> dict[str, Any]:
-    """Start a stateful LangGraph mock interview session inside the MCP server."""
     session_id = str(uuid.uuid4())
     target_questions = max(3, min(max_questions, 8))
     candidate_profile = summarize_cv_profile(cv_text or "") if cv_text.strip() else {}
@@ -557,7 +688,22 @@ def start_mock_interview(
 
 
 @mcp.tool()
-def start_profile_mock_interview(
+async def start_mock_interview(
+    company: str = "Genel",
+    position: str = "Yazılım Mühendisi Stajyeri",
+    category: str = "technical",
+    max_questions: int = 5,
+    cv_text: str = "",
+) -> dict[str, Any]:
+    """Start a stateful LangGraph mock interview session inside the MCP server."""
+    import anyio.to_thread as _to_thread
+    return await _to_thread.run_sync(
+        _start_mock_interview_sync, company, position, category, max_questions, cv_text
+    )
+
+
+@mcp.tool()
+async def start_profile_mock_interview(
     auth_session_id: str,
     company: str = "Genel",
     position: str = "Yazılım Mühendisi Stajyeri",
@@ -565,20 +711,21 @@ def start_profile_mock_interview(
     max_questions: int = 5,
 ) -> dict[str, Any]:
     """Start a mock interview using the logged-in user's saved CV profile."""
+    import anyio.to_thread as _to_thread
     cv_text, profile = _profile_cv_for_auth(auth_session_id)
     if profile is None:
         return {"authenticated": False, "error": "Auth session not found. Run login first."}
 
-    result = start_mock_interview(company, position, category, max_questions, cv_text or "")
+    result = await _to_thread.run_sync(
+        _start_mock_interview_sync, company, position, category, max_questions, cv_text or ""
+    )
     result["authenticated"] = True
     result["profile_email"] = _AUTH_SESSIONS[auth_session_id]["email"]
     result["tools_used"] = ["start_profile_mock_interview", *result.get("tools_used", [])]
     return result
 
 
-@mcp.tool()
-def answer_mock_interview(session_id: str, answer: str) -> dict[str, Any]:
-    """Submit an answer to a terminal MCP mock interview session."""
+def _answer_mock_interview_sync(session_id: str, answer: str) -> dict[str, Any]:
     session = _INTERVIEW_SESSIONS.get(session_id)
     if not session:
         return {"error": "Session not found. Start a new interview.", "session_id": session_id}
@@ -613,6 +760,13 @@ def answer_mock_interview(session_id: str, answer: str) -> dict[str, Any]:
         response["total_questions"] = result.get("max_questions", 5)
 
     return response
+
+
+@mcp.tool()
+async def answer_mock_interview(session_id: str, answer: str) -> dict[str, Any]:
+    """Submit an answer to a terminal MCP mock interview session."""
+    import anyio.to_thread as _to_thread
+    return await _to_thread.run_sync(_answer_mock_interview_sync, session_id, answer)
 
 
 @mcp.resource(
