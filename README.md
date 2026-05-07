@@ -348,6 +348,101 @@ InternIQ/
 └── (assignment reports and study notes are kept locally, outside the repo)
 ```
 
+## 🏛️ Architecture Notes
+
+These are the design decisions that come up most often when this project is reviewed.
+
+### 1. Shared Core — MCP and FastAPI Do Not Duplicate Code
+
+The most common question: *"Are the MCP server and the FastAPI routers two parallel implementations of the same logic?"*
+
+**No.** Both are thin transport adapters over the same business logic modules:
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                  BUSINESS LOGIC (single source)              │
+│                                                              │
+│  langgraph_workflow/    langgraph_interview/                 │
+│  crew/                  services/profile_store               │
+│  services/supabase_auth services/langsmith_tracing           │
+└──────────────────────────────────────────────────────────────┘
+                ▲                              ▲
+                │ import                       │ import
+                │                              │
+       ┌────────┴─────────┐          ┌─────────┴──────────┐
+       │  FastAPI Routers │          │   MCP Server       │
+       │  (HTTP/JSON)     │          │   (stdio JSON-RPC) │
+       │                  │          │                    │
+       │  Pydantic models │          │  @mcp.tool() decor │
+       │  /workflow/...   │          │  17 tools          │
+       │  /interview/...  │          │  2 resources       │
+       │  /crew/...       │          │  1 prompt          │
+       └──────────────────┘          └────────────────────┘
+```
+
+| Module | FastAPI imports it | MCP server imports it |
+|---|---|---|
+| `langgraph_workflow.graph.workflow_graph` | ✅ `routers/workflow.py:6` | ✅ `mcp_server/interniq_mcp.py:23` |
+| `langgraph_interview.graph.{question_graph, answer_graph}` | ✅ `routers/interview.py:91` | ✅ `mcp_server/interniq_mcp.py:22` |
+| `crew.company_crew.run_crew` | ✅ `routers/crew.py` | ✅ via `_run_crew_subprocess.py` |
+| `services.profile_store` | ✅ `routers/workflow.py:9` | ✅ `mcp_server/interniq_mcp.py:25` |
+| `services.supabase_auth` | ✅ `routers/workflow.py:10` | ✅ `mcp_server/interniq_mcp.py:26` |
+| `routers.cv.get_fallback_analysis` | ✅ inside the router | ✅ `mcp_server/interniq_mcp.py:24` (from the router!) |
+
+The only differences are the per-transport adapter concerns (request validation style, auth header vs `auth_session_id` argument, error frame format). A bug fix in the workflow graph propagates to both surfaces automatically.
+
+### 2. Database Touch Points
+
+MCP itself is a protocol — it has no built-in persistence. The DB layer lives behind specific tools.
+
+| MCP Tool | Data source |
+|---|---|
+| `search_internships`, `get_listing_context` | Static JSON — `backend/data/listings.json` |
+| `get_company_context` | Static JSON — `backend/data/companies.json` |
+| `register_user`, `login_user`, `logout_user`, `get_current_account` | **Supabase Auth** via `services/supabase_auth.py` |
+| `analyze_profile_cv_for_listing`, `run_profile_application_workflow`, `start_profile_mock_interview` | Supabase user metadata + `services/profile_store.py` (local cache) |
+| `run_application_workflow`, `analyze_cv_for_listing` (anonymous) | Argument-only — no DB |
+| `run_company_research`, `run_crewai_research` | LLM + static fallback — no DB |
+
+So 8 of 17 tools touch Supabase. The framing is: MCP is the **capability-scoped, type-safe API surface** in front of the database. The LLM never writes SQL — it calls a named tool whose implementation owns the DB query.
+
+### 3. MCP Resources (read-only, no tool call needed)
+
+Two resources are exposed for hosts (e.g. Claude Desktop) that want to attach context without invoking a tool:
+
+| URI | What it returns | Code |
+|---|---|---|
+| `interniq://listings` | All internship listings as JSON | `mcp_server/interniq_mcp.py:772` |
+| `interniq://companies` | All company intelligence profiles as JSON | `mcp_server/interniq_mcp.py:783` |
+
+```python
+@mcp.resource(
+    "interniq://listings",
+    name="InternIQ Listings",
+    description="Read-only JSON snapshot of InternIQ internship listings.",
+    mime_type="application/json",
+)
+def listings_resource() -> str:
+    return json.dumps(_load_listings(), ensure_ascii=False, indent=2)
+```
+
+Tool vs resource distinction: tools are **actions** (parameterised, may have side effects), resources are **data** (idempotent reads). Both back the same JSON files; the resource form is convenient for hosts that pre-load context.
+
+### 4. Memory and State
+
+InternIQ does **not** use any formal LLM memory primitive — no LangChain `ConversationBufferMemory`, no LangGraph `MemorySaver` / SQLite checkpointer, no vector store. There are four in-memory `dict` stores instead, all wiped on backend restart:
+
+| Store | Location | Holds |
+|---|---|---|
+| `_sessions` | `backend/routers/interview.py:94` | Web-side mock interview sessions |
+| `_INTERVIEW_SESSIONS` | `backend/mcp_server/interniq_mcp.py:66` | MCP-side mock interview sessions |
+| `_AUTH_SESSIONS` | `backend/mcp_server/interniq_mcp.py:67` | MCP `login_user` → `{email, profile}` |
+| Frontend Supabase session | `src/context/AuthContext.jsx` | JWT in `localStorage` |
+
+LangGraph workflow runs are single-shot — state lives inside one `workflow_graph.invoke()` call and is gone afterwards. Mock interview is the only multi-turn surface, and it threads its `TypedDict` state through `_sessions[session_id]` between turns. Production would swap the `dict` for Redis and add a `SqliteSaver` / `RedisCheckpointer` to LangGraph.
+
+The MCP host agent (`backend/services/mcp_agent.py`) is also stateless — every `/agent/chat` request starts a fresh conversation, with no recollection of prior queries.
+
 ## 📝 License
 
 © 2026 InternIQ. All rights reserved.
