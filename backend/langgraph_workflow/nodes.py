@@ -28,44 +28,17 @@ def normalize_company_name(value: str) -> str:
 
 
 def get_llm():
-    """Return Gemini client config, or None if no API key."""
-    api_key = os.getenv("GEMINI_API_KEY", "")
-    if not api_key or api_key == "your_gemini_key_here":
+    """Return a ChatOpenAI instance, or None if no API key."""
+    api_key = os.getenv("OPENAI_API_KEY", "")
+    if not api_key or api_key == "your_openai_key_here":
         return None
-    import google.generativeai as genai
-
-    genai.configure(api_key=api_key)
-    preferred_model = os.getenv("GEMINI_MODEL", "models/gemini-2.0-flash-lite")
-    timeout = int(os.getenv("GEMINI_TIMEOUT_SECONDS", "12"))
-    fallback_models = [
-        "models/gemini-flash-lite-latest",
-        "models/gemini-2.0-flash-lite",
-        "models/gemini-2.0-flash",
-    ]
-    ordered_models = [preferred_model] + [name for name in fallback_models if name != preferred_model]
-    return {"genai": genai, "models": ordered_models, "timeout": timeout}
+    from langchain_openai import ChatOpenAI
+    return ChatOpenAI(model="gpt-4o-mini", temperature=0.4, max_tokens=1200)
 
 
 def _invoke_model_text(model, prompt: str) -> str:
-    last_error = None
-
-    for model_name in model["models"]:
-        try:
-            response = model["genai"].GenerativeModel(model_name).generate_content(
-                prompt,
-                request_options={"timeout": model.get("timeout", 12)},
-            )
-            text = getattr(response, "text", "").strip()
-            if text:
-                return text
-        except Exception as exc:
-            last_error = exc
-            continue
-
-    if last_error:
-        raise last_error
-
-    return ""
+    response = model.invoke(prompt)
+    return response.content.strip()
 
 
 def _extract_json_payload(text: str):
@@ -206,7 +179,7 @@ def evaluate_cv(state: dict) -> dict:
         "cv_analysis": result,
         "needs_improvement": score < 70,
         "status": "ai",
-        "llm_provider": "gemini",
+        "llm_provider": "openai",
     }
 
 
@@ -266,7 +239,7 @@ def suggest_improvements(state: dict) -> dict:
             for line in response_text.split("\n")
             if line.strip() and len(line.strip()) > 5
         ]
-        return {"cv_suggestions": suggestions[:6], "llm_provider": "gemini"}
+        return {"cv_suggestions": suggestions[:6], "llm_provider": "openai"}
     except Exception:
         fallback_suggestions = [
             f"{company} için özet kısmınızı ve proje deneyimlerinizi ilana göre yeniden konumlandırın.",
@@ -418,7 +391,7 @@ def generate_interview_prep(state: dict) -> dict:
             "cv_specific": cv_specific[:3],
             "company_specific": company_specific[:3],
         },
-        "llm_provider": "gemini",
+        "llm_provider": "openai",
     }
 
 
@@ -456,23 +429,35 @@ def create_action_plan(state: dict) -> dict:
         }
 
     prompt = (
-        f"Sen bir kariyer danışmanısın. Aşağıdaki bilgilere dayanarak kişiselleştirilmiş bir başvuru aksiyon planı oluştur.\n\n"
+        f"Sen deneyimli bir kariyer danışmanısın. Aşağıdaki bilgilere göre adaya 5 ADIMLI somut bir aksiyon planı yaz.\n\n"
         f"Pozisyon: {listing.get('position', 'Stajyer')} @ {company_name}\n"
         f"CV Skoru: {cv_score}/100\n"
         f"Eksikler: {', '.join(cv_analysis.get('missing_skills', []))}\n"
         f"Aktarılabilir beceriler: {', '.join(cv_analysis.get('transferable_skills', []))}\n"
-        f"Şirket Tech Stack: {', '.join(company_info.get('tech_stack', []))}\n\n"
-        f"Adayın mevcut güçlü projeleri: {', '.join(project.get('title', '') for project in candidate_profile.get('projects', [])[:4])}\n"
-        f"Adayın güçlü becerileri: {', '.join(candidate_profile.get('skills', []))}\n"
+        f"Şirket Tech Stack: {', '.join(company_info.get('tech_stack', []))}\n"
+        f"Şirket Kültürü: {company_info.get('culture', '')[:200]}\n"
+        f"Mülakat Tarzı: {company_info.get('interview_style', '')[:200]}\n\n"
+        f"Adayın mevcut projeleri: {', '.join(project.get('title', '') for project in candidate_profile.get('projects', [])[:4])}\n"
+        f"Adayın becerileri: {', '.join(candidate_profile.get('skills', []))}\n"
         f"CV önerileri: {'; '.join(cv_suggestions[:4])}\n\n"
-        f"JSON formatında 5 adımlı bir aksiyon planı oluştur (sadece JSON):\n"
+        f"KURALLAR:\n"
+        f"- Her adım FARKLI bir kategoriden olmalı. Birden fazla adım 'projeyi vurgula' diyemez.\n"
+        f"- Aşağıdaki 5 kategoriyi tam bu sırayla kullan:\n"
+        f"  1) Teknik Eksiklik Kapatma — eksik beceriden 1 tanesini seç, somut kaynak (kurs/kitap/proje) öner\n"
+        f"  2) Portföy Projesi — adayın mevcut projelerinden birini {company_name} bağlamına nasıl konumlandıracağı (veya yeni proje fikri)\n"
+        f"  3) Şirket Hazırlığı — {company_name}'in kültürü/projesi/son haberleri hakkında ne öğrenmesi gerektiği\n"
+        f"  4) Mülakat Pratiği — şirketin mülakat tarzına özel ne çalışması gerektiği\n"
+        f"  5) Başvuru Stratejisi — CV cover letter ve başvuru zamanlaması\n"
+        f"- Her açıklama 2-3 cümle olmalı, jenerik tavsiye değil somut eylem.\n"
+        f"- Şirket adını ({company_name}) açıklamalarda en az 2 adımda kullan.\n\n"
+        f"Sadece JSON döndür:\n"
         f'{{\n'
         f'  "readiness_score": {cv_score},\n'
         f'  "steps": [\n'
         f'    {{"step": 1, "title": "...", "description": "..."}},\n'
         f'    ...\n'
         f'  ],\n'
-        f'  "summary": "2 cümle Türkçe özet"\n'
+        f'  "summary": "2 cümle Türkçe özet — adayın bu pozisyona hazır olma seviyesi ve odak noktası"\n'
         f'}}'
     )
 
@@ -488,7 +473,7 @@ def create_action_plan(state: dict) -> dict:
     plan["position"] = listing.get("position", "Stajyer")
     plan["company"] = company_name
 
-    return {"action_plan": plan, "llm_provider": "gemini"}
+    return {"action_plan": plan, "llm_provider": "openai"}
 
 
 # ── Fallback helper ─────────────────────────────────────────
