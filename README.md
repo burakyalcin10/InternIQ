@@ -1,95 +1,163 @@
 # InternIQ — AI-Powered Internship Platform
 
-AI-powered internship search platform. Find the right internship, let AI handle the preparation.
+AI-powered internship search and preparation platform. Built incrementally over four assignments — each layered a new AI capability (OpenAI SDK, CrewAI, LangGraph, MCP) onto the same product.
+
+## ⚡ Quick Start
+
+> Prerequisites: **Node.js 18+**, **Python 3.11** (CrewAI does not work on 3.14+), Git.
+
+### 1. Clone the repo
+```bash
+git clone https://github.com/burakyalcin10/InternIQ.git
+cd InternIQ
+```
+
+### 2. Backend (terminal 1)
+```bash
+cd backend
+python -m venv .venv
+
+# Windows
+.venv\Scripts\activate
+# macOS / Linux
+source .venv/bin/activate
+
+pip install -r requirements.txt
+copy .env.example .env          # Windows
+# cp .env.example .env          # macOS / Linux
+
+# Open .env and fill in at least OPENAI_API_KEY (others optional — see below)
+
+uvicorn main:app --reload       # http://localhost:8000
+# Swagger docs: http://localhost:8000/docs
+```
+
+### 3. Frontend (terminal 2 — keep terminal 1 running)
+```bash
+# from the repo root
+npm install
+npm run dev                     # http://localhost:5173
+```
+
+> Frontend config: copy `.env.example` to `.env` at the repo root and set `VITE_API_URL=http://localhost:8000/api/v1` (default already correct), plus optional Supabase keys for auth.
+
+### 4. (Optional) MCP Terminal Client
+After step 2, the `interniqmcp` console script becomes available inside the backend venv:
+```bash
+# in backend/ with .venv active
+interniqmcp
+InternIQ> tools                  # list 17 tools
+InternIQ> login user@example.com
+InternIQ> prepare 1              # uses saved CV when logged in
+```
+
+The MCP terminal spawns the MCP server itself over stdio — it does **not** need the FastAPI server (uvicorn) to be running.
+
+### Minimum keys needed for full functionality
+
+| Feature | Key | What breaks without it |
+|---|---|---|
+| Workflow / Interview / MCP Agent | `OPENAI_API_KEY` | Falls back to canned demo responses |
+| CV Tailorer (Gemini) | `GEMINI_API_KEY` | Falls back to keyword-based analysis |
+| Auth + saved CV | `SUPABASE_URL` + `SUPABASE_KEY` | Auth endpoints disabled — anonymous demo only |
+| LangSmith tracing | `LANGSMITH_*` (3 vars) | Tracing silently disabled |
+
+Without any keys the app still runs end-to-end on fallback data — useful for quick UI demos.
+
+---
 
 ## 🚀 About the Project
 
-InternIQ is an AI platform that automates the end-to-end internship application process for university students. It operates through four core modules:
+InternIQ automates the end-to-end internship application process for university students. It exposes its features both as a regular web app and as an **MCP server**, so any LLM can drive the platform autonomously.
 
-1. **🔍 Staj Radar** — Aggregates internship listings from multiple platforms with search & filtering
-2. **📄 CV Tailorer** — AI-powered CV optimization with ATS score analysis (Gemini AI)
-3. **🏢 Company Intel** — Company culture, tech stack & interview insights via CrewAI multi-agent research
-4. **🎤 Mock Interview** — Position-specific interview simulation with instant feedback
+| Module | Powered by | What it does |
+|---|---|---|
+| **🔍 Staj Radar** | Static aggregation + filters | Surfaces internship listings from multiple sources |
+| **📄 CV Tailorer** | Google Gemini | PDF CV analysis with ATS-style scoring & suggestions |
+| **🏢 Company Intel** | CrewAI (3 sequential agents) | Culture + tech stack + interview report |
+| **🎤 Mock Interview** | LangGraph (2 graphs) | Stateful, adaptive-difficulty interview simulation |
+| **🛠️ Application Workflow** | LangGraph (7-node graph) | End-to-end preparation pipeline for a chosen listing |
+| **🤖 MCP Server + AI Agent** | MCP / FastMCP | 17 tools exposed over stdio + LLM-as-MCP-host chat |
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **React 18** + **Vite** — Single Page Application with client-side routing
-- **Framer Motion** — Smooth animations and micro-interactions
-- **Lucide React** — Modern icon set
-- **Custom CSS Design System** — Dark theme with glassmorphism
+- **React 18** + **Vite** + **React Router v7** — SPA with client-side routing
+- **Framer Motion** — Animations and micro-interactions
+- **Lucide React** — Icon set
+- **Custom CSS Design System** — Brutalist-modern dark theme (amber accent, solid cards, no glassmorphism)
+- **Custom SVG logomark** — `src/components/Logo.jsx` (5-square matrix mark)
 
 ### Backend
 - **FastAPI** (Python 3.11) — REST API with automatic OpenAPI docs
 - **Uvicorn** — ASGI server
-- **Supabase** — PostgreSQL database (planned migration)
+- **FastMCP** — MCP server runtime (stdio transport)
+- **Supabase** — Auth + PostgreSQL database
 
 ### AI Integrations
-- **CrewAI** — Multi-agent company research (3 agents: Culture Researcher, Tech Analyst, Report Writer)
-- **LangGraph** — Stateful workflow orchestration (Application Workflow + AI Interview)
-- **Google Gemini** — CV analysis and ATS scoring
-- **OpenAI GPT-4o-mini** — LLM backbone for CrewAI agents and LangGraph nodes
-- **LangSmith** — Tracing and observability for LangGraph workflows
+- **OpenAI GPT-4o-mini** — LLM backbone for CrewAI agents, LangGraph nodes, MCP host agent
+- **Google Gemini** — PDF CV analysis and ATS scoring
+- **CrewAI** — Multi-agent company research (Culture Researcher → Tech Analyst → Report Writer)
+- **LangGraph** — Stateful workflow orchestration (Application Workflow + Mock Interview)
+- **MCP (Model Context Protocol)** — Standard protocol layer over the platform's features
+- **LangSmith** — Tracing and observability for LangGraph runs
 
-## 🤖 CrewAI Architecture
+## 🤖 CrewAI Architecture (Company Intel)
 
-The Company Intel module uses a 3-agent crew with sequential processing:
+3-agent crew with sequential processing:
 
 ```
 User selects company → POST /api/v1/crew/research
-                            │
-                            ▼
-                ┌─────────────────────┐
-                │  Culture Researcher │  → Analyzes work culture, intern experiences
-                └──────────┬──────────┘
-                           │
-                           ▼
-                ┌─────────────────────┐
-                │   Tech Analyst      │  → Researches tech stack, interview process
-                └──────────┬──────────┘
-                           │
-                           ▼
-                ┌─────────────────────┐
-                │   Report Writer     │  → Synthesizes into structured JSON report
-                └──────────┬──────────┘
-                           │
-                           ▼
-                  Final Intelligence Report
-                  (displayed in React UI)
+                              │
+                              ▼
+                  ┌─────────────────────┐
+                  │  Culture Researcher │  → work culture, intern experiences
+                  └──────────┬──────────┘
+                             ▼
+                  ┌─────────────────────┐
+                  │   Tech Analyst      │  → tech stack, interview process
+                  └──────────┬──────────┘
+                             ▼
+                  ┌─────────────────────┐
+                  │   Report Writer     │  → structured JSON report
+                  └──────────┬──────────┘
+                             ▼
+                    Final Intelligence Report
 ```
 
 - **Config files**: `backend/crew/config/agents.yaml` & `tasks.yaml`
 - **Kickoff code**: `backend/crew/company_crew.py` → `run_crew()`
-- **Fallback**: Pre-built reports when API keys are unavailable
+- **Fallback**: Pre-built reports for ASELSAN, BAYKAR when API keys are unavailable
+- **Subprocess isolation**: When invoked via MCP, the crew runs in a clean Python subprocess (`backend/crew/_run_crew_subprocess.py`) so its verbose output cannot corrupt MCP JSON-RPC frames
 
 ## 🔀 LangGraph Architecture
 
-### 1. Application Preparation Workflow (`/api/v1/workflow/prepare`)
+### 1. Application Preparation Workflow (`POST /api/v1/workflow/prepare`)
 
 A 7-node StateGraph that orchestrates the entire application preparation process:
 
 ```
 START → analyze_listing → evaluate_cv → [check_cv_score]
-                                          ├── "needs_improvement" → suggest_improvements ─┐
-                                          └── "good_fit" ────────────────────────────────────┤
-                                                                                             ▼
-                                                                                    research_company
-                                                                                             │
-                                                                                             ▼
-                                                                                generate_interview_prep
-                                                                                             │
-                                                                                             ▼
-                                                                                    create_action_plan
-                                                                                             │
-                                                                                             ▼
-                                                                                            END
+                                          ├── score < 70 → suggest_improvements ─┐
+                                          └── score ≥ 70 ──────────────────────────┤
+                                                                                    ▼
+                                                                          research_company
+                                                                                    │
+                                                                                    ▼
+                                                                      generate_interview_prep
+                                                                                    │
+                                                                                    ▼
+                                                                          create_action_plan
+                                                                                    │
+                                                                                    ▼
+                                                                                   END
 ```
 
-- **Conditional Edge**: If CV score < 70, routes through `suggest_improvements` before company research
-- **7 Nodes**: Each performs a specific analysis step with LLM + fallback
-- **Output**: Comprehensive action plan with CV analysis, company info, interview questions
+- **Conditional Edge**: If CV score < 70, routes through `suggest_improvements` first — token savings on strong CVs
+- **Action plan prompt**: 5 fixed categories (Technical Gap / Portfolio / Company Prep / Interview Practice / Application Strategy), no duplicate steps, company name required in at least 2 steps
+- **Subprocess isolation**: When invoked via MCP, runs in `backend/langgraph_workflow/_run_workflow_subprocess.py`
 
-### 2. AI Mock Interview (`/api/v1/interview/lg/*`)
+### 2. AI Mock Interview (`POST /api/v1/interview/lg/*`)
 
 Two compiled StateGraphs for stateful interview sessions:
 
@@ -101,21 +169,74 @@ START → generate_question → END
 **Answer Graph** (per-answer):
 ```
 START → evaluate_answer → adjust_difficulty → [check_progress]
-                                                ├── "continue" → generate_question → END
-                                                └── "done"     → generate_summary  → END
+                                                ├── continue → generate_question → END
+                                                └── done     → generate_summary  → END
 ```
 
-- **Dynamic Difficulty**: Adjusts question difficulty based on rolling score average
-- **Session Management**: In-memory session store for stateful multi-turn conversations
-- **5 Nodes**: generate_question, evaluate_answer, adjust_difficulty, check_progress (router), generate_summary
-- **LangSmith Integration**: All graph executions are traced for observability
+- **Adaptive Difficulty**: Adjusts based on rolling score average
+- **In-memory session store**: `_sessions[session_id]` in `routers/interview.py`
+- **5 nodes**: `generate_question`, `evaluate_answer`, `adjust_difficulty`, `check_progress` (router), `generate_summary`
+
+## 🔌 MCP Architecture
+
+InternIQ exposes its features as a Model Context Protocol server — any LLM (Claude, GPT, etc.) can drive the platform via tool calling.
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  Frontend /ajan      Terminal: interniqmcp                │
+│         ↓                       ↓                         │
+│  POST /agent/chat      direct stdio spawn                 │
+│         ↓                                                 │
+│  mcp_agent.py  (LLM-as-MCP-host — GPT-4o-mini)            │
+│      • discover tools via MCP protocol                    │
+│      • loop: LLM picks tool → call → feed result back     │
+│      • max 6 iterations                                   │
+│         ↓ stdio                                           │
+│  interniq_mcp.py  (FastMCP server)                        │
+│      • 17 tools / 2 resources / 1 prompt                  │
+│      • heavy tools (CrewAI, LangGraph) → subprocess       │
+└──────────────────────────────────────────────────────────┘
+```
+
+### What's exposed (17 tools)
+
+| Category | Tools |
+|---|---|
+| Discovery | `list_interniq_features`, `search_internships`, `get_listing_context`, `get_company_context` |
+| Auth | `register_user`, `login_user`, `logout_user`, `get_current_account` |
+| CV | `analyze_cv_for_listing`, `analyze_profile_cv_for_listing` |
+| Workflow | `run_application_workflow`, `run_profile_application_workflow` |
+| Interview | `start_mock_interview`, `start_profile_mock_interview`, `answer_mock_interview` |
+| Research | `run_company_research` (local), `run_crewai_research` (CrewAI subprocess) |
+
+### Three ways to use it
+
+```bash
+# 1. Browser — /ajan page
+open http://localhost:5173/ajan
+
+# 2. Terminal client (no FastAPI required)
+interniqmcp
+InternIQ> tools                  # list 17 tools
+InternIQ> login user@example.com
+InternIQ> prepare 1              # auto-uses saved CV when logged in
+
+# 3. Programmatic — POST /api/v1/agent/chat
+curl -X POST http://localhost:8000/api/v1/agent/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Python remote stajı bul"}'
+```
+
+### Why subprocess isolation?
+
+Inside the FastMCP stdio child on Windows, the openai SDK's first sync httpx request hangs indefinitely (asyncio + piped stdio interaction). CrewAI and LangGraph workflow are therefore spawned as clean subprocesses (`_run_crew_subprocess.py`, `_run_workflow_subprocess.py`) — JSON-only output, UTF-8 stdout, stderr discarded. Same fix also prevents CrewAI's verbose output from corrupting MCP JSON-RPC frames.
 
 ## 📦 Setup
 
 ### Frontend
 ```bash
 npm install
-npm run dev
+npm run dev               # http://localhost:5173
 ```
 
 ### Backend
@@ -123,49 +244,40 @@ npm run dev
 cd backend
 python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
-copy .env.example .env
-# Fill in API keys in .env
-.venv\Scripts\python -m uvicorn main:app --reload
+copy .env.example .env    # fill in API keys
+.venv\Scripts\python -m uvicorn main:app --reload   # http://localhost:8000
 ```
 
 ### Environment Variables
+
 | Variable | Required | Used For |
-|----------|----------|----------|
-| `OPENAI_API_KEY` | For real AI | CrewAI agents + LangGraph interview & workflow |
-| `GEMINI_API_KEY` | For real CV analysis | CV Tailorer Gemini AI mode |
-| `LANGSMITH_TRACING` | Optional | Enable LangSmith tracing (`true`) |
-| `LANGSMITH_API_KEY` | Optional | LangSmith API key for observability |
-| `LANGSMITH_PROJECT` | Optional | LangSmith project name |
-| `CORS_ORIGINS` | Yes | Allowed frontend domains |
+|---|---|---|
+| `OPENAI_API_KEY` | for real AI | CrewAI, LangGraph, MCP host agent |
+| `GEMINI_API_KEY` | for real CV analysis | CV Tailorer Gemini mode |
+| `SUPABASE_URL` / `SUPABASE_KEY` | for auth | User registration, login, CV profile storage |
+| `LANGSMITH_TRACING` | optional | Set to `true` to enable LangSmith tracing |
+| `LANGSMITH_API_KEY` | optional | LangSmith API key |
+| `LANGSMITH_PROJECT` | optional | LangSmith project name (default: `InternIQ`) |
+| `CORS_ORIGINS` | yes | Allowed frontend origins |
 
 ### LangSmith Tracing
 
-LangSmith tracing is now wired into both LangGraph flows:
+When `LANGSMITH_TRACING=true`, every LangGraph invocation is traced with tags + metadata (workflow vs interview, listing id, CV source, session id, difficulty, question count). View runs at [smith.langchain.com](https://smith.langchain.com) under the configured project.
 
-- `POST /api/v1/workflow/prepare`
-- `POST /api/v1/interview/lg/start`
-- `POST /api/v1/interview/lg/answer`
+### MCP Terminal
 
-To enable it locally, add these values to `backend/.env`:
+Once `pip install -e .` is run inside `backend/`, the `interniqmcp` console script becomes available:
 
-```env
-LANGSMITH_TRACING=true
-LANGSMITH_API_KEY=your_langsmith_key_here
-LANGSMITH_PROJECT=InternIQ
+```bash
+interniqmcp
 ```
 
-When enabled, each run is sent to LangSmith with tags and metadata such as:
-
-- workflow vs interview flow
-- listing id
-- CV source
-- interview session id
-- difficulty / question count
+Spawns the MCP server over stdio and gives an interactive REPL with 20+ commands (`tools`, `search`, `prepare`, `crewai`, `interview`, `ask`, etc.). The FastAPI server does **not** need to be running.
 
 ## 🌐 Deployment
 
 | Service | Platform | URL |
-|---------|----------|-----|
+|---|---|---|
 | Frontend | Vercel | [intern-iq-iota.vercel.app](https://intern-iq-iota.vercel.app) |
 | Backend | Render | [interniq-api.onrender.com](https://interniq-api.onrender.com) |
 
@@ -173,41 +285,68 @@ When enabled, each run is sent to LangSmith with tags and metadata such as:
 
 ```
 InternIQ/
-├── src/                          # React Frontend
-│   ├── components/               # UI Components
-│   │   ├── MockInterview.jsx     # AI Interview (LangGraph) + Basic mode
-│   │   ├── ApplicationWorkflow.jsx # LangGraph Workflow UI
-│   │   ├── CVTailorer.jsx        # CV Analysis (Gemini)
-│   │   ├── CompanyCards.jsx      # Company Intel
-│   │   └── ...                   # Hero, BentoGrid, Timeline, etc.
-│   ├── pages/                    # Page components
-│   ├── services/api.js           # API service layer
-│   ├── hooks/                    # Custom React hooks
-│   └── index.css                 # Design system
-├── backend/                      # FastAPI Backend
-│   ├── main.py                   # FastAPI app entry point
-│   ├── routers/                  # API endpoints
-│   │   ├── interview.py          # Interview (Basic + LangGraph)
-│   │   ├── workflow.py           # LangGraph Application Workflow
-│   │   ├── crew.py               # CrewAI Company Research
-│   │   ├── cv.py                 # CV Analysis (Gemini)
-│   │   ├── listings.py           # Staj Radar
-│   │   └── companies.py          # Company Data
-│   ├── langgraph_interview/      # LangGraph Interview Module
-│   │   ├── state.py              # InterviewState (TypedDict)
-│   │   ├── nodes.py              # 5 graph nodes
-│   │   └── graph.py              # StateGraph definition & compile
-│   ├── langgraph_workflow/       # LangGraph Workflow Module
-│   │   ├── state.py              # WorkflowState (TypedDict)
-│   │   ├── nodes.py              # 7 graph nodes
-│   │   └── graph.py              # StateGraph definition & compile
-│   ├── crew/                     # CrewAI Module
-│   │   ├── company_crew.py       # Agent creation & crew kickoff
-│   │   └── config/               # YAML agent/task configs
-│   ├── data/                     # JSON data files
-│   └── requirements.txt          # Python dependencies
+├── src/                                # React Frontend
+│   ├── components/
+│   │   ├── AgentChat.jsx               # MCP Agent chat UI (/ajan)
+│   │   ├── ApplicationWorkflow.jsx     # LangGraph workflow UI
+│   │   ├── MockInterview.jsx           # AI Interview (LangGraph)
+│   │   ├── CVTailorer.jsx              # CV analysis (Gemini)
+│   │   ├── CompanyCards.jsx            # Company Intel
+│   │   ├── Timeline.jsx                # Assignment-week timeline
+│   │   ├── Logo.jsx                    # 5-square matrix logomark
+│   │   └── ...                         # Hero, BentoGrid, ListingList…
+│   ├── pages/                          # Page components (HomePage, AgentPage…)
+│   ├── context/AuthContext.jsx         # Supabase auth state
+│   ├── services/api.js                 # Centralized API client
+│   └── index.css                       # Brutalist-modern design system
+│
+├── backend/                            # FastAPI Backend
+│   ├── main.py                         # FastAPI entry, CORS, routers
+│   ├── routers/
+│   │   ├── auth.py                     # /auth/{register,login,me}
+│   │   ├── listings.py                 # /listings
+│   │   ├── companies.py                # /companies
+│   │   ├── cv.py                       # /cv/analyze (Gemini)
+│   │   ├── interview.py                # /interview (basic + LangGraph)
+│   │   ├── workflow.py                 # /workflow/prepare
+│   │   ├── crew.py                     # /crew/research (CrewAI)
+│   │   ├── mcp.py                      # /mcp/demo
+│   │   └── agent.py                    # /agent/chat (LLM-as-MCP-host)
+│   │
+│   ├── langgraph_workflow/             # 7-node Application Workflow
+│   │   ├── state.py                    # WorkflowState (TypedDict)
+│   │   ├── nodes.py                    # 7 node functions
+│   │   ├── graph.py                    # StateGraph build & compile
+│   │   └── _run_workflow_subprocess.py # MCP subprocess runner
+│   │
+│   ├── langgraph_interview/            # Mock Interview (2 graphs)
+│   │   ├── state.py
+│   │   ├── nodes.py                    # 5 nodes
+│   │   └── graph.py                    # question_graph, answer_graph
+│   │
+│   ├── crew/                           # CrewAI module
+│   │   ├── company_crew.py             # Agent + crew + run_crew()
+│   │   ├── config/{agents,tasks}.yaml  # Crew definitions
+│   │   └── _run_crew_subprocess.py     # MCP subprocess runner
+│   │
+│   ├── mcp_server/
+│   │   └── interniq_mcp.py             # MCP server (17 tools)
+│   │
+│   ├── services/
+│   │   ├── mcp_bridge.py               # MCP demo client
+│   │   ├── mcp_agent.py                # LLM-as-MCP-host loop
+│   │   ├── interniq_terminal.py        # interniqmcp REPL
+│   │   ├── langsmith_tracing.py        # Tracing context manager
+│   │   ├── profile_store.py            # User CV profiles
+│   │   └── supabase_auth.py            # Auth validation
+│   │
+│   ├── data/                           # Static JSON (listings, companies)
+│   └── requirements.txt
+│
 └── docs/
-    └── AI_Agent_Planning.md      # AI agent planning document
+    ├── AI_Agent_Planning.md            # Original planning document
+    ├── LangGraph_Implementation_Report.md
+    └── MCP_Demo_Script.md
 ```
 
 ## 📝 License
