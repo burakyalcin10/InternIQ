@@ -31,3 +31,8 @@ _old/
 
 # Local profile cache
 backend/data/profiles.json
+
+# Local-only docs and notes (assignment reports, MCP study notes, presentation script)
+docs/
+mcp inceleme/
+SUNUM.md

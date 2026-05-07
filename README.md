@@ -343,10 +343,7 @@ InternIQ/
 │   ├── data/                           # Static JSON (listings, companies)
 │   └── requirements.txt
 │
-└── docs/
-    ├── AI_Agent_Planning.md            # Original planning document
-    ├── LangGraph_Implementation_Report.md
-    └── MCP_Demo_Script.md
+└── (assignment reports and study notes are kept locally, outside the repo)
 ```
 
 ## 📝 License
