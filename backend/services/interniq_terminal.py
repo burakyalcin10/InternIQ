@@ -5,15 +5,20 @@ from __future__ import annotations
 import asyncio
 import getpass
 import json
+import os
 import shlex
 import sys
 from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
 from mcp import ClientSession
 from mcp.client.stdio import stdio_client
 
+load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+
 from services.mcp_bridge import _extract_json_from_tool, _server_parameters, _tool_summary
+from services.mcp_agent import run_agent
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -45,6 +50,7 @@ InternIQ MCP Terminal
 Commands:
   help
   tools
+  ask <natural language query>          ← LLM picks tools autonomously
   login <email>
   profile
   logout
@@ -52,11 +58,13 @@ Commands:
   search <query>
   listing <listing_id>
   company <company_name>
-  research <company_name>
+  research <company_name>                    ← local data (fast)
+  crewai <company_name>                      ← CrewAI 3-agent report (1-3 min)
   cv <listing_id> <cv_file_path | cv_text>
   cv-profile <listing_id>
   workflow <listing_id> <cv_file_path | cv_text>
   workflow-profile <listing_id>
+  prepare <listing_id> [cv_file_path | cv_text]   ← auto-uses saved CV if logged in
   interview start <company> <position> [max_questions]
   interview-profile start <company> <position> [max_questions]
   interview answer <session_id> <answer_text>
@@ -64,6 +72,9 @@ Commands:
   quit
 
 Examples:
+  ask ASELSAN hakkinda bilgi ver
+  ask Python staji ara, remote olsun
+  ask 1 numarali ilan icin basvuru hazirla
   search python remote
   login deneme@gmail.com
   profile
@@ -72,6 +83,7 @@ Examples:
   cv-profile 1
   workflow 1 "Python C++ embedded systems project"
   workflow-profile 1
+  prepare 1                                          (after login → uses saved CV)
   interview start ASELSAN "Software Engineering Intern" 3
   interview-profile start ASELSAN "Software Engineering Intern" 3
   interview answer <session_id> "I built an embedded systems project with C++..."
@@ -113,11 +125,50 @@ def _short_print(tool_name: str, result: dict[str, Any]) -> None:
         return
 
     if tool_name == "run_application_workflow":
+        listing = result.get("listing", {})
+        print(f"\n=== {listing.get('position', '')} @ {listing.get('company', '')} ===")
         print(f"CV Score: {result.get('cv_score')}")
-        action_plan = result.get("action_plan", {})
-        print(action_plan.get("summary", ""))
-        for step in action_plan.get("steps", []):
-            print(f"  {step.get('step')}. {step.get('title')}: {step.get('description')}")
+
+        analysis = result.get("cv_analysis") or {}
+        if analysis:
+            if analysis.get("summary"):
+                print(f"\n[CV Analysis]\n{analysis.get('summary')}")
+            if analysis.get("matched_skills"):
+                print(f"Matched skills: {', '.join(analysis.get('matched_skills', []))}")
+            if analysis.get("transferable_skills"):
+                print(f"Transferable: {', '.join(analysis.get('transferable_skills', []))}")
+            if analysis.get("missing_skills"):
+                print(f"Missing: {', '.join(analysis.get('missing_skills', []))}")
+
+        suggestions = result.get("cv_suggestions") or []
+        if suggestions:
+            print("\n[CV Suggestions]")
+            for i, s in enumerate(suggestions, 1):
+                print(f"  {i}. {s}")
+
+        company = result.get("company_info") or {}
+        if company:
+            print(f"\n[Company: {company.get('name', '')}]")
+            if company.get("culture"):
+                print(f"Culture: {company.get('culture')}")
+            if company.get("interview_style"):
+                print(f"Interview style: {company.get('interview_style')}")
+            if company.get("tech_stack"):
+                print(f"Tech stack: {', '.join(company.get('tech_stack', []))}")
+
+        questions = result.get("interview_questions") or []
+        if questions:
+            print("\n[Interview Questions]")
+            for i, q in enumerate(questions, 1):
+                print(f"  {i}. {q}")
+
+        action_plan = result.get("action_plan") or {}
+        if action_plan:
+            print("\n[Action Plan]")
+            if action_plan.get("summary"):
+                print(action_plan.get("summary"))
+            for step in action_plan.get("steps", []):
+                print(f"  {step.get('step')}. {step.get('title')}: {step.get('description')}")
         return
 
     if tool_name == "start_mock_interview":
@@ -191,6 +242,46 @@ async def _handle_command(session: ClientSession, line: str, state: dict[str, An
         for tool in tools_result.tools:
             summary = _tool_summary(tool)
             print(f"- {summary['name']}: {summary['description']}")
+        return True
+
+    if command == "ask":
+        query = " ".join(parts[1:])
+        if not query:
+            print("Usage: ask <query>")
+            return True
+
+        user_profile = None
+        auth_session_id = state.get("auth_session_id")
+        if auth_session_id:
+            account = await _call_tool(session, "get_current_account", {"auth_session_id": auth_session_id})
+            if account.get("authenticated"):
+                profile_data = account.get("profile", {})
+                user_profile = {
+                    "email": (account.get("user") or {}).get("email", ""),
+                    **profile_data,
+                }
+                cv_indicator = " (CV included)" if profile_data.get("cv_text") else ""
+                print(f"Profile loaded: {user_profile['email']}{cv_indicator}")
+
+        print("LLM discovering MCP tools...")
+        try:
+            result = await run_agent(query, user_profile=user_profile)
+        except Exception as exc:
+            print(f"Error: {exc}")
+            return True
+        tool_calls = result.get("tool_calls") or []
+        if tool_calls:
+            print(f"\n[{len(tool_calls)} tool call(s)]")
+            for i, tc in enumerate(tool_calls, 1):
+                args_preview = "  ".join(
+                    f"{k}: {str(v)[:40]}" for k, v in (tc.get("args") or {}).items()
+                )
+                print(f"  {str(i).zfill(2)}  {tc['tool']}  {args_preview}")
+        answer = result.get("answer") or ""
+        if answer:
+            print(f"\n{answer}\n")
+        else:
+            print(f"\n[status: {result.get('status', '?')}  tools: {result.get('tools_available', [])}]\n")
         return True
 
     if command == "login" and len(parts) >= 2:
@@ -267,6 +358,12 @@ async def _handle_command(session: ClientSession, line: str, state: dict[str, An
         _short_print("run_company_research", result)
         return True
 
+    if command == "crewai" and len(parts) >= 2:
+        print("Running CrewAI agents (1-3 min)...")
+        result = await _call_tool(session, "run_crewai_research", {"company_name": " ".join(parts[1:])})
+        _print_json(result)
+        return True
+
     if command == "cv" and len(parts) >= 3:
         result = await _call_tool(
             session,
@@ -294,6 +391,32 @@ async def _handle_command(session: ClientSession, line: str, state: dict[str, An
             session,
             "run_application_workflow",
             {"listing_id": int(parts[1]), "cv_text": _read_text_arg(parts, 2)},
+        )
+        _short_print("run_application_workflow", result)
+        return True
+
+    if command == "prepare" and len(parts) >= 2:
+        listing_id = int(parts[1])
+        auth_session_id = state.get("auth_session_id")
+        # If logged in and a CV is saved on the profile, use it automatically.
+        if auth_session_id and len(parts) == 2:
+            account = await _call_tool(
+                session, "get_current_account", {"auth_session_id": auth_session_id}
+            )
+            if account.get("authenticated") and account.get("has_profile_cv"):
+                print(f"Using saved CV for {account.get('user', {}).get('email')}...")
+                result = await _call_tool(
+                    session,
+                    "run_profile_application_workflow",
+                    {"auth_session_id": auth_session_id, "listing_id": listing_id},
+                )
+                _short_print("run_application_workflow", result)
+                return True
+        # Otherwise fall back to workflow with whatever cv was passed (or empty).
+        result = await _call_tool(
+            session,
+            "run_application_workflow",
+            {"listing_id": listing_id, "cv_text": _read_text_arg(parts, 2)},
         )
         _short_print("run_application_workflow", result)
         return True
