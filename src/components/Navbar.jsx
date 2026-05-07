@@ -22,7 +22,6 @@ export default function Navbar() {
     { to: '/features', label: 'Özellikler' },
     { to: '/ajan', label: 'MCP Ajan' },
     { to: '/about', label: 'Hakkında' },
-    ...(isAuthenticated ? [{ to: '/hesabim', label: 'Hesabım' }] : []),
   ]
 
   return (
